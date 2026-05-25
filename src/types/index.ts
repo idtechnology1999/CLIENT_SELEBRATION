@@ -7,6 +7,7 @@ export interface User {
   referralCode: string;
   referredBy?: string;
   stage: number;
+  subscription: 'trial' | 'active' | 'expired' | 'cancelled';
   createdAt: string;
   trialEndsAt: string;
 }
@@ -17,6 +18,7 @@ export interface Course {
   title: string;
   description: string;
   thumbnail: string;
+  price?: number; // deprecated - users pay per module now
   modules: Module[];
 }
 

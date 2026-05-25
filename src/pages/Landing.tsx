@@ -1,13 +1,42 @@
+import { useState, useEffect } from 'react';
+import logo from '../assets/logo.png';
 import { Link } from 'react-router-dom';
-import { ArrowRight, TrendingUp, Check, Play, Award, DollarSign, BookOpen, MessageCircle, Zap, Target, UserPlus, Globe, ChevronRight } from 'lucide-react';
+import { ArrowRight, Check, Play, Award, DollarSign, BookOpen, UserPlus, ChevronRight, Loader } from 'lucide-react';
+import { publicApi, fixUrl } from '../services/api';
+
+interface Course {
+  id: string;
+  title: string;
+  description: string;
+  thumbnail: string;
+  category: string;
+  difficulty: string;
+  modulesCount: number;
+  whatYouLearn: string[];
+}
 
 export default function Landing() {
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [coursesLoading, setCoursesLoading] = useState(true);
+  const [subscriptionPrice, setSubscriptionPrice] = useState(5000);
+
+  useEffect(() => {
+    publicApi.getCourses()
+      .then(res => setCourses(res.data))
+      .catch(() => {})
+      .finally(() => setCoursesLoading(false));
+
+    publicApi.getSettings()
+      .then(res => { if (res.data.subscriptionPrice) setSubscriptionPrice(res.data.subscriptionPrice); })
+      .catch(() => {});
+  }, []);
+
   return (
     <div className="min-h-screen bg-gray-900 text-white">
       <header className="fixed top-0 left-0 right-0 bg-gray-900/95 backdrop-blur z-50 border-b border-gray-800">
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-          <Link to="/" className="text-2xl font-bold">
-            <span className="text-amber-500">Sell</span><span className="text-white">iberation</span>
+          <Link to="/">
+            <img src={logo} alt="Selebration" className="h-10 w-auto object-contain" />
           </Link>
           <nav className="hidden md:flex items-center gap-8">
             <a href="#courses" className="text-gray-300 hover:text-white transition-colors">Courses</a>
@@ -58,7 +87,7 @@ export default function Landing() {
               </div>
               <div className="flex items-center gap-2">
                 <Check className="text-green-500" size={20} />
-                <span>5 Professional Courses</span>
+                <span>{coursesLoading ? '...' : `${courses.length || 'Professional'}`} Courses</span>
               </div>
               <div className="flex items-center gap-2">
                 <Check className="text-green-500" size={20} />
@@ -123,85 +152,56 @@ export default function Landing() {
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">Our Courses</h2>
             <p className="text-gray-400 text-lg max-w-2xl mx-auto">
-              Five comprehensive courses designed to take you from beginner to earning. Start with free modules, upgrade when you're ready.
+              {coursesLoading ? 'Our' : courses.length > 0 ? `${['One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten'][courses.length - 1] ?? courses.length}` : 'No'} comprehensive {courses.length === 1 ? 'course' : 'courses'} designed to take you from beginner to earning. Start with free modules, upgrade when you're ready.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[
-              {
-                title: "Make Your First ₦10k-₦50k Online",
-                description: "The ultimate beginner's guide to earning money online. Learn proven strategies that actually work in Nigeria.",
-                modules: 8,
-                lessons: 24,
-                image: "https://images.unsplash.com/photo-1553729459-efe14ef6055d?w=600&h=400&fit=crop",
-                color: "amber",
-                icon: TrendingUp
-              },
-              {
-                title: "WhatsApp Monetization",
-                description: "Turn your WhatsApp into a money-making machine. Build channels, offer services, and attract clients.",
-                modules: 6,
-                lessons: 18,
-                image: "https://images.unsplash.com/photo-1611746872915-64382b5c2b36?w=600&h=400&fit=crop",
-                color: "green",
-                icon: MessageCircle
-              },
-              {
-                title: "Affiliate Marketing Intro",
-                description: "Master the art of promoting products and earning commissions. Work from anywhere, any time.",
-                modules: 5,
-                lessons: 15,
-                image: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=600&h=400&fit=crop",
-                color: "blue",
-                icon: Target
-              },
-              {
-                title: "Digital Products Reselling",
-                description: "Create and sell digital products for passive income. E-books, templates, courses, and more.",
-                modules: 6,
-                lessons: 20,
-                image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=600&h=400&fit=crop",
-                color: "purple",
-                icon: Globe
-              },
-              {
-                title: "Simple Arbitrage Strategies",
-                description: "Profit from price differences across different markets. Low risk, quick returns.",
-                modules: 4,
-                lessons: 12,
-                image: "https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?w=600&h=400&fit=crop",
-                color: "red",
-                icon: Zap
-              },
-            ].map((course, i) => (
-              <div key={i} className="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden hover:border-amber-500/50 transition-all group hover:shadow-xl hover:shadow-amber-500/10">
-                <div className="relative h-48 overflow-hidden">
-                  <img src={course.image} alt={course.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-transparent to-transparent"></div>
-                  <div className="absolute top-4 left-4">
-                    <span className={`bg-${course.color}-500 text-white text-xs font-bold px-3 py-1 rounded-full`}>
-                      Free Module Available
-                    </span>
+          {coursesLoading ? (
+            <div className="flex justify-center py-16">
+              <Loader className="animate-spin text-amber-500" size={36} />
+            </div>
+          ) : courses.length === 0 ? (
+            <p className="text-center text-gray-500 py-16">No courses available yet. Check back soon!</p>
+          ) : (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {courses.map(course => (
+                <div key={course.id} className="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden hover:border-amber-500/50 transition-all group hover:shadow-xl hover:shadow-amber-500/10">
+                  <div className="relative h-48 overflow-hidden bg-gray-700">
+                    {course.thumbnail ? (
+                      <img src={fixUrl(course.thumbnail)} alt={course.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <BookOpen className="text-gray-500" size={48} />
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-transparent to-transparent"></div>
+                    <div className="absolute top-4 left-4">
+                      <span className="bg-amber-500 text-white text-xs font-bold px-3 py-1 rounded-full">
+                        Free Module Available
+                      </span>
+                    </div>
+                    {course.difficulty && (
+                      <div className="absolute top-4 right-4">
+                        <span className="bg-gray-900/80 text-gray-300 text-xs px-2 py-1 rounded-full">{course.difficulty}</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="p-6">
+                    <div className="flex items-center gap-2 text-gray-400 text-sm mb-2">
+                      <BookOpen size={16} />
+                      <span>{course.modulesCount} Module{course.modulesCount !== 1 ? 's' : ''}</span>
+                      {course.category && <><span className="mx-1">•</span><span>{course.category}</span></>}
+                    </div>
+                    <h3 className="text-lg font-bold mb-2">{course.title}</h3>
+                    <p className="text-gray-400 text-sm mb-4 line-clamp-2">{course.description}</p>
+                    <Link to="/register" className="text-amber-500 font-semibold flex items-center gap-1 hover:gap-2 transition-all">
+                      Start Learning <ChevronRight size={16} />
+                    </Link>
                   </div>
                 </div>
-                <div className="p-6">
-                  <div className="flex items-center gap-2 text-gray-400 text-sm mb-2">
-                    <BookOpen size={16} />
-                    <span>{course.modules} Modules</span>
-                    <span className="mx-2">•</span>
-                    <Play size={16} />
-                    <span>{course.lessons} Lessons</span>
-                  </div>
-                  <h3 className="text-lg font-bold mb-2">{course.title}</h3>
-                  <p className="text-gray-400 text-sm mb-4">{course.description}</p>
-                  <Link to="/register" className="text-amber-500 font-semibold flex items-center gap-1 hover:gap-2 transition-all">
-                    Start Learning <ChevronRight size={16} />
-                  </Link>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
@@ -254,7 +254,7 @@ export default function Landing() {
               </div>
               <div className="text-center mb-8">
                 <h3 className="text-xl font-bold mb-2 text-gray-900">Premium</h3>
-                <div className="text-4xl font-bold text-gray-900 mb-1">₦5,000</div>
+                <div className="text-4xl font-bold text-gray-900 mb-1">₦{subscriptionPrice.toLocaleString()}</div>
                 <p className="text-gray-800/70">per month</p>
               </div>
               <ul className="space-y-4 mb-8 text-gray-900">

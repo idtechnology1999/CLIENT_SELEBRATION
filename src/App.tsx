@@ -4,53 +4,45 @@ import Landing from './pages/Landing';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Layout from './components/Layout';
-import AdminLayout from './components/AdminLayout';
 import Dashboard from './pages/dashboard/Dashboard';
 import Courses from './pages/dashboard/Courses';
-import CourseDetail from './pages/dashboard/CourseDetail';
 import Referrals from './pages/dashboard/Referrals';
 import Earnings from './pages/dashboard/Earnings';
 import Withdraw from './pages/dashboard/Withdraw';
 import Settings from './pages/dashboard/Settings';
-import AdminDashboard from './pages/admin/AdminDashboard';
-import AdminUsers from './pages/admin/AdminUsers';
-import AdminCourses from './pages/admin/AdminCourses';
-import AdminCommissions from './pages/admin/AdminCommissions';
-import AdminWithdrawals from './pages/admin/AdminWithdrawals';
-import AdminSettings from './pages/admin/AdminSettings';
+import SubscribeCallback from './pages/dashboard/SubscribeCallback';
 
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated } = useAuth();
-  return isAuthenticated ? <>{children}</> : <Navigate to="/login" />;
+function LoadingScreen() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="w-10 h-10 border-4 border-amber-500 border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
 }
 
-function AdminRoute({ children }: { children: React.ReactNode }) {
-  const { user } = useAuth();
-  if (!user) return <Navigate to="/login" />;
-  if (user.role !== 'admin') return <Navigate to="/dashboard" />;
-  return <>{children}</>;
+// Redirect unauthenticated users to login
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated, loading } = useAuth();
+  if (loading) return <LoadingScreen />;
+  return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />;
+}
+
+// Redirect already-authenticated users away from login/register
+function PublicRoute({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated, loading } = useAuth();
+  if (loading) return <LoadingScreen />;
+  return isAuthenticated ? <Navigate to="/dashboard" replace /> : <>{children}</>;
 }
 
 function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<Landing />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
       <Route path="/pricing" element={<Landing />} />
-      <Route path="/admin" element={
-        <AdminRoute>
-          <AdminLayout />
-        </AdminRoute>
-      }>
-        <Route index element={<AdminDashboard />} />
-        <Route path="users" element={<AdminUsers />} />
-        <Route path="courses" element={<AdminCourses />} />
-        <Route path="commissions" element={<AdminCommissions />} />
-        <Route path="withdrawals" element={<AdminWithdrawals />} />
-        <Route path="settings" element={<AdminSettings />} />
-      </Route>
-      
+
+      <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
+      <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
+
       <Route path="/dashboard" element={
         <ProtectedRoute>
           <Layout />
@@ -58,12 +50,15 @@ function AppRoutes() {
       }>
         <Route index element={<Dashboard />} />
         <Route path="courses" element={<Courses />} />
-        <Route path="courses/:courseSlug" element={<CourseDetail />} />
+        <Route path="courses/:courseSlug" element={<Navigate to="/dashboard/courses" replace />} />
         <Route path="referrals" element={<Referrals />} />
         <Route path="earnings" element={<Earnings />} />
         <Route path="withdraw" element={<Withdraw />} />
         <Route path="settings" element={<Settings />} />
+        <Route path="subscribe/callback" element={<SubscribeCallback />} />
       </Route>
+
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }
