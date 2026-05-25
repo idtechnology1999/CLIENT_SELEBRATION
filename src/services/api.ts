@@ -114,3 +114,12 @@ export const notificationApi = {
   markRead: (id: string) =>
     req<{ success: true }>('PUT', `/student/notifications/${id}/read`),
 };
+
+export const chatApi = {
+  getMessages: () =>
+    req<{ success: true; data: any[] }>('GET', '/chat/messages'),
+  send: (message: string) =>
+    req<{ success: true; data: any }>('POST', '/chat/send', { message }),
+  unreadCount: () =>
+    req<{ success: true; data: { count: number } }>('GET', '/chat/unread-count'),
+};

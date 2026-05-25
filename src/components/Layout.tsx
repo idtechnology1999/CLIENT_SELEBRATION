@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { LayoutDashboard, BookOpen, Users, DollarSign, Wallet, Settings, LogOut, Menu, X, Bell } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { notificationApi } from '../services/api';
+import ChatWidget from './ChatWidget';
 
 export default function Layout() {
   const { user, logout } = useAuth();
@@ -125,6 +126,8 @@ export default function Layout() {
           <Outlet />
         </div>
       </main>
+
+      <ChatWidget />
     </div>
   );
 }
