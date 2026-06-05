@@ -12,12 +12,10 @@ export default function SubscribeCallback() {
   const { refreshUser } = useAuth();
   const [status, setStatus] = useState<Status>('verifying');
   const [message, setMessage] = useState('');
-  const [courseId, setCourseId] = useState('');
 
   useEffect(() => {
     const reference = searchParams.get('reference') || searchParams.get('trxref');
     const type = searchParams.get('type');
-    const cid = searchParams.get('courseId') || '';
 
     if (!reference) {
       setStatus('failed');
@@ -31,7 +29,6 @@ export default function SubscribeCallback() {
     };
 
     if (type === 'module') {
-      setCourseId(cid);
       paymentApi.verifyModulePayment(reference)
         .then(res => { setStatus('success'); setMessage(res.message || 'Module unlocked!'); })
         .catch(fail);
