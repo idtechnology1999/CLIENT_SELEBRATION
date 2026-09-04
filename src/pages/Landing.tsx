@@ -1,35 +1,8 @@
-import { useState, useEffect } from 'react';
 import logo from '../assets/logo.png';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Check, Play, Award, DollarSign, BookOpen, UserPlus, ChevronRight, Loader } from 'lucide-react';
-import { publicApi, fixUrl } from '../services/api';
-
-interface Course {
-  id: string;
-  title: string;
-  description: string;
-  thumbnail: string;
-  category: string;
-  difficulty: string;
-  modulesCount: number;
-  whatYouLearn: string[];
-}
+import { ArrowRight, Check, Award, DollarSign, BookOpen, UserPlus } from 'lucide-react';
 
 export default function Landing() {
-  const [courses, setCourses] = useState<Course[]>([]);
-  const [coursesLoading, setCoursesLoading] = useState(true);
-  const [subscriptionPrice, setSubscriptionPrice] = useState(5000);
-
-  useEffect(() => {
-    publicApi.getCourses()
-      .then(res => setCourses(res.data))
-      .catch(() => {})
-      .finally(() => setCoursesLoading(false));
-
-    publicApi.getSettings()
-      .then(res => { if (res.data.subscriptionPrice) setSubscriptionPrice(res.data.subscriptionPrice); })
-      .catch(() => {});
-  }, []);
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
@@ -39,7 +12,6 @@ export default function Landing() {
             <img src={logo} alt="Selebration" className="h-10 w-auto object-contain" />
           </Link>
           <nav className="hidden md:flex items-center gap-8">
-            <a href="#courses" className="text-gray-300 hover:text-white transition-colors">Courses</a>
             <a href="#how-it-works" className="text-gray-300 hover:text-white transition-colors">How It Works</a>
             <a href="#pricing" className="text-gray-300 hover:text-white transition-colors">Pricing</a>
             <a href="#affiliate" className="text-gray-300 hover:text-white transition-colors">Earn</a>
@@ -62,22 +34,19 @@ export default function Landing() {
           <div className="text-center max-w-4xl mx-auto">
             <div className="inline-flex items-center gap-2 bg-green-500/20 text-green-400 px-4 py-2 rounded-full mb-6 border border-green-500/30">
               <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
-              Join 10,000+ Nigerians Earning Online
+              Join 10,000+ Africans Earning Online
             </div>
             <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">
               Learn to Earn Online
               <span className="text-amber-500 block mt-2">While You Learn</span>
             </h1>
             <p className="text-xl text-gray-400 max-w-2xl mx-auto mb-8">
-              Master profitable digital skills through our video courses and simultaneously build your income through our revolutionary affiliate program. Start for free, upgrade when you're ready.
+              Master profitable digital skills through our video courses and simultaneously build your income. Start for free, upgrade when you're ready.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
               <Link to="/register" className="bg-amber-500 hover:bg-amber-600 text-gray-900 font-bold px-8 py-4 rounded-lg text-lg flex items-center justify-center gap-2 shadow-lg shadow-amber-500/25">
                 Start 7-Day Free Trial <ArrowRight size={20} />
               </Link>
-              <a href="#courses" className="border border-gray-600 hover:border-gray-500 px-8 py-4 rounded-lg text-lg flex items-center justify-center gap-2">
-                <Play size={20} /> Explore Courses
-              </a>
             </div>
             
             <div className="flex flex-wrap justify-center gap-8 text-gray-400">
@@ -87,7 +56,7 @@ export default function Landing() {
               </div>
               <div className="flex items-center gap-2">
                 <Check className="text-green-500" size={20} />
-                <span>{coursesLoading ? '...' : `${courses.length || 'Professional'}`} Courses</span>
+                <span>Multiple ways to earn</span>
               </div>
               <div className="flex items-center gap-2">
                 <Check className="text-green-500" size={20} />
@@ -116,7 +85,7 @@ export default function Landing() {
               <div className="text-amber-500 font-bold text-sm mb-2">STEP 1</div>
               <h3 className="text-xl font-bold mb-3">Sign Up Free</h3>
               <p className="text-gray-400">
-                Register with your name, email, and phone number. No payment required for the 7-day free trial. Get instant access to Module 1 of all courses.
+                Register with your name, email, and phone number. No payment required for the 7-day free trial.
               </p>
             </div>
 
@@ -128,7 +97,7 @@ export default function Landing() {
               <div className="text-green-500 font-bold text-sm mb-2">STEP 2</div>
               <h3 className="text-xl font-bold mb-3">Learn & Grow</h3>
               <p className="text-gray-400">
-                Access quality video courses taught by experts. Learn practical skills in WhatsApp monetization, affiliate marketing, digital reselling, and more.
+                Access quality video courses taught by experts. Learn practical skills.
               </p>
             </div>
 
@@ -140,151 +109,118 @@ export default function Landing() {
               <div className="text-blue-500 font-bold text-sm mb-2">STEP 3</div>
               <h3 className="text-xl font-bold mb-3">Earn Rewards</h3>
               <p className="text-gray-400">
-                Share your referral link and earn up to 65% commission when your referrals subscribe. The more you share, the more you earn!
+                Earn with multiple digital skills, practical taught in the program
               </p>
             </div>
           </div>
         </div>
       </section>
 
-      <section id="courses" className="py-20 px-4">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Our Courses</h2>
-            <p className="text-gray-400 text-lg max-w-2xl mx-auto">
-              {coursesLoading ? 'Our' : courses.length > 0 ? `${['One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten'][courses.length - 1] ?? courses.length}` : 'No'} comprehensive {courses.length === 1 ? 'course' : 'courses'} designed to take you from beginner to earning. Start with free modules, upgrade when you're ready.
-            </p>
-          </div>
-
-          {coursesLoading ? (
-            <div className="flex justify-center py-16">
-              <Loader className="animate-spin text-amber-500" size={36} />
-            </div>
-          ) : courses.length === 0 ? (
-            <p className="text-center text-gray-500 py-16">No courses available yet. Check back soon!</p>
-          ) : (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {courses.map(course => (
-                <div key={course.id} className="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden hover:border-amber-500/50 transition-all group hover:shadow-xl hover:shadow-amber-500/10">
-                  <div className="relative h-48 overflow-hidden bg-gray-700">
-                    {course.thumbnail ? (
-                      <img src={fixUrl(course.thumbnail)} alt={course.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <BookOpen className="text-gray-500" size={48} />
-                      </div>
-                    )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-transparent to-transparent"></div>
-                    <div className="absolute top-4 left-4">
-                      <span className="bg-amber-500 text-white text-xs font-bold px-3 py-1 rounded-full">
-                        Free Module Available
-                      </span>
-                    </div>
-                    {course.difficulty && (
-                      <div className="absolute top-4 right-4">
-                        <span className="bg-gray-900/80 text-gray-300 text-xs px-2 py-1 rounded-full">{course.difficulty}</span>
-                      </div>
-                    )}
-                  </div>
-                  <div className="p-6">
-                    <div className="flex items-center gap-2 text-gray-400 text-sm mb-2">
-                      <BookOpen size={16} />
-                      <span>{course.modulesCount} Module{course.modulesCount !== 1 ? 's' : ''}</span>
-                      {course.category && <><span className="mx-1">•</span><span>{course.category}</span></>}
-                    </div>
-                    <h3 className="text-lg font-bold mb-2">{course.title}</h3>
-                    <p className="text-gray-400 text-sm mb-4 line-clamp-2">{course.description}</p>
-                    <Link to="/register" className="text-amber-500 font-semibold flex items-center gap-1 hover:gap-2 transition-all">
-                      Start Learning <ChevronRight size={16} />
-                    </Link>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </section>
-
       <section id="pricing" className="py-20 px-4 bg-gray-800/50">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Simple, Affordable Pricing</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Choose Your Level</h2>
             <p className="text-gray-400 text-lg max-w-2xl mx-auto">
-              Start completely free. Upgrade when you're ready to unlock all content and maximize your earning potential.
+              Start with a 7-day free trial on the Fish level. Upgrade as you grow.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-            <div className="bg-gray-800 rounded-2xl border border-gray-700 p-8">
-              <div className="text-center mb-8">
-                <h3 className="text-xl font-bold mb-2">Free Trial</h3>
-                <div className="text-4xl font-bold text-white mb-1">₦0</div>
-                <p className="text-gray-400">7 days free</p>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {/* FISH */}
+            <div className="bg-gray-800 rounded-2xl border border-blue-500/40 p-6 flex flex-col relative overflow-hidden">
+              <div className="absolute top-0 right-0 bg-blue-500 text-white text-xs font-bold px-3 py-1 rounded-bl-lg rounded-tr-2xl">
+                FREE TRIAL
               </div>
-              <ul className="space-y-4 mb-8">
-                <li className="flex items-center gap-3">
-                  <Check className="text-green-500 flex-shrink-0" size={20} />
-                  <span>Access to Module 1 of all courses</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <Check className="text-green-500 flex-shrink-0" size={20} />
-                  <span>Introduction videos</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <Check className="text-green-500 flex-shrink-0" size={20} />
-                  <span>Basic WhatsApp Monetization</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <Check className="text-green-500 flex-shrink-0" size={20} />
-                  <span>Affiliate program access</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <Check className="text-green-500 flex-shrink-0" size={20} />
-                  <span>Community support</span>
-                </li>
+              <div className="text-3xl mb-1">🐟</div>
+              <h3 className="text-lg font-bold text-blue-400 mb-0.5">FISH</h3>
+              <p className="text-sm text-gray-400 mb-4">First Money Online</p>
+              <div className="mb-5">
+                <span className="text-3xl font-bold text-white">₦5,000</span>
+                <span className="text-gray-400 text-sm ml-1">/ month</span>
+                <p className="text-xs text-blue-400 mt-1 font-medium">7-day free trial included</p>
+              </div>
+              <ul className="space-y-2.5 mb-6 flex-1">
+                {['7-Day Income Training', '8 Online Income Models', 'First Client System', 'Daily Action Plan'].map(f => (
+                  <li key={f} className="flex items-start gap-2 text-sm text-gray-300">
+                    <Check className="text-blue-400 flex-shrink-0 mt-0.5" size={15} />{f}
+                  </li>
+                ))}
               </ul>
-              <Link to="/register" className="block w-full border border-amber-500 text-amber-500 hover:bg-amber-500 hover:text-gray-900 font-bold py-3 rounded-lg text-center transition-colors">
+              <p className="text-xs text-blue-400 font-semibold mb-4 text-center">🎯 Make your first money online.</p>
+              <Link to="/register" className="block w-full border border-blue-500 text-blue-400 hover:bg-blue-500 hover:text-white font-bold py-2.5 rounded-lg text-center transition-colors text-sm">
                 Start Free Trial
               </Link>
             </div>
 
-            <div className="bg-gradient-to-br from-amber-500 to-amber-600 rounded-2xl p-8 relative">
-              <div className="absolute top-0 right-0 bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-bl-lg rounded-tr-lg">
+            {/* DOLPHIN */}
+            <div className="bg-gray-800 rounded-2xl border border-teal-500/40 p-6 flex flex-col">
+              <div className="text-3xl mb-1">🐬</div>
+              <h3 className="text-lg font-bold text-teal-400 mb-0.5">DOLPHIN</h3>
+              <p className="text-sm text-gray-400 mb-4">Skilled Digital Earner</p>
+              <div className="mb-5">
+                <span className="text-3xl font-bold text-white">₦15,000</span>
+                <span className="text-gray-400 text-sm ml-1">/ month</span>
+              </div>
+              <ul className="space-y-2.5 mb-6 flex-1">
+                {['High-Income Digital Skills', 'AI & Content Creation', 'Freelancing Blueprint', 'Client Closing Scripts', 'Remote Job System'].map(f => (
+                  <li key={f} className="flex items-start gap-2 text-sm text-gray-300">
+                    <Check className="text-teal-400 flex-shrink-0 mt-0.5" size={15} />{f}
+                  </li>
+                ))}
+              </ul>
+              <p className="text-xs text-teal-400 font-semibold mb-4 text-center">🎯 Earn consistent monthly income.</p>
+              <Link to="/register" className="block w-full border border-teal-500 text-teal-400 hover:bg-teal-500 hover:text-white font-bold py-2.5 rounded-lg text-center transition-colors text-sm">
+                Get Started
+              </Link>
+            </div>
+
+            {/* SHARK */}
+            <div className="bg-gray-800 rounded-2xl border border-purple-500/40 p-6 flex flex-col relative overflow-hidden">
+              <div className="absolute top-0 right-0 bg-purple-500 text-white text-xs font-bold px-3 py-1 rounded-bl-lg rounded-tr-2xl">
                 POPULAR
               </div>
-              <div className="text-center mb-8">
-                <h3 className="text-xl font-bold mb-2 text-gray-900">Premium</h3>
-                <div className="text-4xl font-bold text-gray-900 mb-1">₦{subscriptionPrice.toLocaleString()}</div>
-                <p className="text-gray-800/70">per month</p>
+              <div className="text-3xl mb-1">🦈</div>
+              <h3 className="text-lg font-bold text-purple-400 mb-0.5">SHARK</h3>
+              <p className="text-sm text-gray-400 mb-4">Build An Online Business</p>
+              <div className="mb-5">
+                <span className="text-3xl font-bold text-white">₦50,000</span>
+                <span className="text-gray-400 text-sm ml-1">/ month</span>
               </div>
-              <ul className="space-y-4 mb-8 text-gray-900">
-                <li className="flex items-center gap-3">
-                  <Check className="flex-shrink-0" size={20} />
-                  <span className="font-semibold">All 5 courses unlimited access</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <Check className="flex-shrink-0" size={20} />
-                  <span className="font-semibold">All modules & lessons</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <Check className="flex-shrink-0" size={20} />
-                  <span className="font-semibold">Advanced strategies</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <Check className="flex-shrink-0" size={20} />
-                  <span className="font-semibold">Priority support</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <Check className="flex-shrink-0" size={20} />
-                  <span className="font-semibold">Full affiliate commission</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <Check className="flex-shrink-0" size={20} />
-                  <span className="font-semibold">Certificate of completion</span>
-                </li>
+              <ul className="space-y-2.5 mb-6 flex-1">
+                {['Digital Products', 'Sales Funnels', 'Traffic Generation', 'High-Ticket Selling', 'Business Automation'].map(f => (
+                  <li key={f} className="flex items-start gap-2 text-sm text-gray-300">
+                    <Check className="text-purple-400 flex-shrink-0 mt-0.5" size={15} />{f}
+                  </li>
+                ))}
               </ul>
-              <Link to="/register" className="block w-full bg-gray-900 hover:bg-gray-800 text-white font-bold py-3 rounded-lg text-center transition-colors">
-                Subscribe Now
+              <p className="text-xs text-purple-400 font-semibold mb-4 text-center">🎯 Build income beyond your time.</p>
+              <Link to="/register" className="block w-full border border-purple-500 text-purple-400 hover:bg-purple-500 hover:text-white font-bold py-2.5 rounded-lg text-center transition-colors text-sm">
+                Get Started
+              </Link>
+            </div>
+
+            {/* WHALE */}
+            <div className="bg-gradient-to-br from-amber-500/20 to-amber-600/10 rounded-2xl border border-amber-500/60 p-6 flex flex-col relative overflow-hidden">
+              <div className="absolute top-0 right-0 bg-amber-500 text-gray-900 text-xs font-bold px-3 py-1 rounded-bl-lg rounded-tr-2xl">
+                ELITE
+              </div>
+              <div className="text-3xl mb-1">🐋</div>
+              <h3 className="text-lg font-bold text-amber-400 mb-0.5">WHALE</h3>
+              <p className="text-sm text-gray-400 mb-4">Wealth, Influence & Legacy</p>
+              <div className="mb-5">
+                <span className="text-3xl font-bold text-white">₦150,000</span>
+                <span className="text-gray-400 text-sm ml-1">/ month</span>
+              </div>
+              <ul className="space-y-2.5 mb-6 flex-1">
+                {['Multiple Income Streams', 'Authority Brand Building', 'Advanced AI Systems', 'Partnerships & Investments', 'Leadership & Team Building', 'Private Mastermind'].map(f => (
+                  <li key={f} className="flex items-start gap-2 text-sm text-gray-300">
+                    <Check className="text-amber-400 flex-shrink-0 mt-0.5" size={15} />{f}
+                  </li>
+                ))}
+              </ul>
+              <p className="text-xs text-amber-400 font-semibold mb-4 text-center">🎯 Build assets, teams, and long-term wealth.</p>
+              <Link to="/register" className="block w-full bg-amber-500 hover:bg-amber-600 text-gray-900 font-bold py-2.5 rounded-lg text-center transition-colors text-sm">
+                Go Elite
               </Link>
             </div>
           </div>
@@ -368,7 +304,7 @@ export default function Landing() {
           <Award className="mx-auto text-amber-500 mb-6" size={48} />
           <h2 className="text-3xl md:text-4xl font-bold mb-4">Ready to Transform Your Life?</h2>
           <p className="text-xl text-gray-400 mb-8">
-            Join thousands of Nigerians who are already earning online while building valuable skills. Your journey to financial freedom starts here.
+            Join thousands of Africans who are already earning online while building valuable skills. Your journey to financial freedom starts here.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link to="/register" className="bg-amber-500 hover:bg-amber-600 text-gray-900 font-bold px-8 py-4 rounded-lg text-lg shadow-lg shadow-amber-500/25">
@@ -387,7 +323,7 @@ export default function Landing() {
             {[
               { number: '10,000+', label: 'Active Members' },
               { number: '₦50M+', label: 'Commissions Paid' },
-              { number: '5', label: 'Professional Courses' },
+              { number: '5', label: 'Digital Earning Communitys' },
               { number: '24/7', label: 'Support Available' },
             ].map((stat, i) => (
               <div key={i}>
@@ -406,11 +342,10 @@ export default function Landing() {
               <Link to="/" className="text-2xl font-bold">
                 <span className="text-amber-500">Sell</span><span className="text-white">iberation</span>
               </Link>
-              <p className="text-gray-500 mt-2">Part of Digital World Tech Academy</p>
             </div>
             <div className="flex gap-6 text-gray-400">
-              <a href="#" className="hover:text-white">Terms</a>
-              <a href="#" className="hover:text-white">Privacy</a>
+              <Link to="/terms" className="hover:text-white">Terms</Link>
+              <Link to="/privacy" className="hover:text-white">Privacy</Link>
               <a href="#" className="hover:text-white">Contact</a>
             </div>
           </div>

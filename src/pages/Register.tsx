@@ -14,6 +14,7 @@ export default function Register() {
   const [password, setPassword] = useState('');
   const [referralCode, setReferralCode] = useState(refCode);
   const [showPassword, setShowPassword] = useState(false);
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -127,9 +128,23 @@ export default function Register() {
                     className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-amber-500"
                   />
                 </div>
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={agreedToTerms}
+                    onChange={(e) => setAgreedToTerms(e.target.checked)}
+                    className="mt-1 w-4 h-4 accent-amber-500 flex-shrink-0"
+                  />
+                  <span className="text-gray-400 text-sm">
+                    I have read and agree to the{' '}
+                    <Link to="/terms" className="text-amber-400 hover:underline">Terms of Service</Link>
+                    {' '}and{' '}
+                    <Link to="/privacy" className="text-amber-400 hover:underline">Privacy Policy</Link>
+                  </span>
+                </label>
                 <button
                   type="submit"
-                  disabled={loading}
+                  disabled={loading || !agreedToTerms}
                   className="w-full bg-amber-500 hover:bg-amber-600 disabled:opacity-60 text-gray-900 font-bold py-3 rounded-lg transition-colors"
                 >
                   {loading ? 'Sending OTP...' : 'Start Free Trial'}

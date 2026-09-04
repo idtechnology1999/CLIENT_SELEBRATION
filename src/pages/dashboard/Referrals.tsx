@@ -20,10 +20,10 @@ interface ReferralData {
 const DEFAULT_RATES = [65, 15, 5, 3, 2, 1];
 
 const COURSE_LEVELS = [
-  { key: 'free',  label: 'Free',           price: 0,      icon: '🟢', color: 'green' },
-  { key: 'fish',  label: 'Become a Fish',  price: 5000,   icon: '🐟', color: 'blue'  },
-  { key: 'shark', label: 'Become a Shark', price: 15000,  icon: '🦈', color: 'purple'},
-  { key: 'whale', label: 'Become a Whale', price: 150000, icon: '🐋', color: 'amber' },
+  { key: 'fish',    label: 'Become a Fish',    price: 5000,   icon: '🐟', color: 'blue'   },
+  { key: 'dolphin', label: 'Become a Dolphin', price: 15000,  icon: '🐬', color: 'teal'   },
+  { key: 'shark',   label: 'Become a Shark',   price: 50000,  icon: '🦈', color: 'purple' },
+  { key: 'whale',   label: 'Become a Whale',   price: 150000, icon: '🐋', color: 'amber'  },
 ];
 
 export default function Referrals() {

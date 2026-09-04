@@ -40,6 +40,12 @@ export const userAuthApi = {
 
   me: () =>
     req<{ success: true; data: any }>('GET', '/user-auth/me'),
+
+  forgotPassword: (email: string) =>
+    req<{ success: true; message: string }>('POST', '/user-auth/forgot-password', { email }),
+
+  resetPassword: (token: string, password: string) =>
+    req<{ success: true; message: string }>('POST', '/user-auth/reset-password', { token, password }),
 };
 
 export const paymentApi = {
@@ -49,12 +55,6 @@ export const paymentApi = {
   verifySubscription: (reference: string) =>
     req<{ success: true; message: string; data: { reference: string; amount: number } }>('GET', `/payment/verify?reference=${encodeURIComponent(reference)}`),
 
-  initModulePayment: (courseId: string, moduleId: string) =>
-    req<{ success: true; data: { authorizationUrl: string; reference: string; amount: number } }>('POST', '/payment/init-module', { courseId, moduleId }),
-
-  verifyModulePayment: (reference: string) =>
-    req<{ success: true; message: string; data: { moduleId: string; courseId: string } }>('GET', `/payment/verify-module?reference=${encodeURIComponent(reference)}`),
-
   verifyAccount: (accountNumber: string, bankCode: string) =>
     req<{ success: true; data: { account_name: string; account_number: string } }>('POST', '/payment/verify-account', { accountNumber, bankCode }),
 
@@ -63,6 +63,9 @@ export const paymentApi = {
 
   verifyStageUpgrade: (reference: string) =>
     req<{ success: true; message: string; data: { stage: string; stageNum: number } }>('GET', `/payment/verify-stage?reference=${encodeURIComponent(reference)}`),
+
+  verifyModulePayment: (reference: string) =>
+    req<{ success: true; message: string }>('GET', `/payment/verify-module?reference=${encodeURIComponent(reference)}`),
 };
 
 export const studentApi = {
@@ -96,8 +99,6 @@ export const studentApi = {
   changePassword: (currentPassword: string, newPassword: string) =>
     req<{ success: true; message: string }>('POST', '/student/change-password', { currentPassword, newPassword }),
 
-  getUnlockedModules: (courseId: string) =>
-    req<{ success: true; data: string[] }>('GET', `/student/unlocked-modules?courseId=${encodeURIComponent(courseId)}`),
 };
 
 export const publicApi = {
