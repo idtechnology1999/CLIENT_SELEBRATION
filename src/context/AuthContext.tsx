@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useMemo, type ReactNode } from 'react';
 import type { User } from '../types';
 import { userAuthApi, getToken, setToken, clearToken } from '../services/api';
 
@@ -48,34 +48,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .finally(() => setLoading(false));
   }, []);
 
-  const login = async (email: string, password: string) => {
+  // Functions are memoized so pages that list them as effect dependencies
+  // don't re-run every time the user object changes.
+  const login = useCallback(async (email: string, password: string) => {
     const res = await userAuthApi.login(email, password);
     setToken(res.token);
     setUser(mapUser(res.data));
-  };
+  }, []);
 
-  const register = async (name: string, email: string, phone: string, password: string, refCode?: string) => {
+  const register = useCallback(async (name: string, email: string, phone: string, password: string, refCode?: string) => {
     await userAuthApi.register(name, email, phone, password, refCode);
-  };
+  }, []);
 
-  const verifyEmail = async (email: string, otp: string) => {
+  const verifyEmail = useCallback(async (email: string, otp: string) => {
     const res = await userAuthApi.verifyEmail(email, otp);
     setToken(res.token);
     setUser(mapUser(res.data));
-  };
+  }, []);
 
-  const logout = () => {
+  const logout = useCallback(() => {
     clearToken();
     setUser(null);
-  };
+  }, []);
 
-  const refreshUser = async () => {
+  const refreshUser = useCallback(async () => {
     const res = await userAuthApi.me();
     setUser(mapUser(res.data));
-  };
+  }, []);
+
+  const value = useMemo(
+    () => ({ user, isAuthenticated: !!user, loading, login, register, verifyEmail, logout, refreshUser }),
+    [user, loading, login, register, verifyEmail, logout, refreshUser],
+  );
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated: !!user, loading, login, register, verifyEmail, logout, refreshUser }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );

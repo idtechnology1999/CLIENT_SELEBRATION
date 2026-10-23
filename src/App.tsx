@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useSearchParams } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Landing from './pages/Landing';
 import Login from './pages/Login';
@@ -15,6 +15,7 @@ import Earnings from './pages/dashboard/Earnings';
 import Withdraw from './pages/dashboard/Withdraw';
 import Settings from './pages/dashboard/Settings';
 import SubscribeCallback from './pages/dashboard/SubscribeCallback';
+import { getPaidPlan, afterAuthPath } from './utils/plan';
 
 function LoadingScreen() {
   return (
@@ -32,10 +33,14 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 }
 
 // Redirect already-authenticated users away from login/register
+// (straight to payment if they picked a paid plan on the landing page)
 function PublicRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, loading } = useAuth();
+  const [searchParams] = useSearchParams();
   if (loading) return <LoadingScreen />;
-  return isAuthenticated ? <Navigate to="/dashboard" replace /> : <>{children}</>;
+  return isAuthenticated
+    ? <Navigate to={afterAuthPath(getPaidPlan(searchParams))} replace />
+    : <>{children}</>;
 }
 
 function AppRoutes() {

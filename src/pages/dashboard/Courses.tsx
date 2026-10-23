@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Play, Lock, BookOpen, AlertCircle, ChevronLeft, ChevronDown, ChevronUp, Loader } from 'lucide-react';
 import { studentApi, paymentApi, fixUrl } from '../../services/api';
 
@@ -58,6 +59,25 @@ export default function Courses() {
       setUpgradingStage(null);
     }
   };
+
+  // Coming from a plan button on the landing page (?upgrade=shark):
+  // open that stage and start its payment, unless the user already has it.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const upgradeParam = searchParams.get('upgrade');
+  const autoUpgradeDone = useRef(false);
+
+  useEffect(() => {
+    if (loading || !upgradeParam || autoUpgradeDone.current) return;
+    autoUpgradeDone.current = true;
+    setSearchParams({}, { replace: true });
+
+    const stage = STAGES.find(s => s.key === upgradeParam && !s.trial);
+    if (!stage) return;
+    setExpandedStages({ [stage.key]: true });
+
+    const alreadyUnlocked = courses.some(c => c.stages.some(s => s.stage === stage.key && s.unlocked));
+    if (!alreadyUnlocked) handleUpgrade(stage.key);
+  }, [loading, upgradeParam, courses, setSearchParams]);
 
   if (loading) return (
     <div className="space-y-3">

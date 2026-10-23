@@ -1,10 +1,13 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Eye, EyeOff } from 'lucide-react';
 import logo from '../assets/logo.png';
+import { PAID_PLANS, getPaidPlan, afterAuthPath, withPlan } from '../utils/plan';
 
 export default function Login() {
+  const [searchParams] = useSearchParams();
+  const plan = getPaidPlan(searchParams);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -19,7 +22,7 @@ export default function Login() {
     setLoading(true);
     try {
       await login(email, password);
-      navigate('/dashboard');
+      navigate(afterAuthPath(plan));
     } catch (err: any) {
       setError(err.message || 'Invalid email or password');
     } finally {
@@ -35,7 +38,11 @@ export default function Login() {
         </Link>
         <div className="bg-gray-800 rounded-2xl p-8 border border-gray-700">
           <h1 className="text-2xl font-bold text-white mb-1">Welcome Back</h1>
-          <p className="text-gray-400 text-sm mb-6">Sign in to your account</p>
+          <p className="text-gray-400 text-sm mb-6">
+            {plan
+              ? <>Sign in to continue to the <span className="text-amber-400 font-semibold">{PAID_PLANS[plan]}</span> plan</>
+              : 'Sign in to your account'}
+          </p>
 
           {error && (
             <div className="bg-red-900/40 border border-red-500/40 text-red-400 px-4 py-3 rounded-lg mb-5 text-sm">
@@ -83,7 +90,7 @@ export default function Login() {
             </button>
           </form>
           <p className="text-gray-400 text-center mt-6 text-sm">
-            Don't have an account? <Link to="/register" className="text-amber-500 hover:underline">Register</Link>
+            Don't have an account? <Link to={withPlan('/register', plan)} className="text-amber-500 hover:underline">Register</Link>
           </p>
         </div>
       </div>

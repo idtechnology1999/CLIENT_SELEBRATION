@@ -37,12 +37,22 @@ export default function Landing() {
               Join 10,000+ Africans Earning Online
             </div>
             <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">
-              Learn to Earn Online
-              <span className="text-amber-500 block mt-2">While You Learn</span>
+              Turn Your Skills Into Income
+              <span className="text-amber-500 block mt-2">&amp; Your Income Into Wealth.</span>
             </h1>
-            <p className="text-xl text-gray-400 max-w-2xl mx-auto mb-8">
-              Master profitable digital skills through our video courses and simultaneously build your income. Start for free, upgrade when you're ready.
-            </p>
+            <div className="max-w-2xl mx-auto mb-10 space-y-6">
+              <p className="text-lg md:text-xl text-gray-300 leading-relaxed text-pretty">
+                Learning a skill is just the beginning. The real opportunity lies in knowing how to monetize it, build income streams, grow a business, and create lasting value.
+              </p>
+              <p className="text-lg md:text-2xl font-semibold text-white leading-snug text-balance border-y border-amber-500/30 py-5">
+                SellLiberation helps you turn <span className="text-amber-500">what you know</span> into{' '}
+                <span className="text-amber-500">what you earn</span> and what you earn into{' '}
+                <span className="text-amber-500">what you build</span>.
+              </p>
+              <p className="text-base md:text-lg text-gray-400 leading-relaxed text-pretty">
+                Whether you're starting from zero, seeking more income, building a business, or scaling an existing venture, we provide a structured pathway to your next level.
+              </p>
+            </div>
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
               <Link to="/register" className="bg-amber-500 hover:bg-amber-600 text-gray-900 font-bold px-8 py-4 rounded-lg text-lg flex items-center justify-center gap-2 shadow-lg shadow-amber-500/25">
                 Start 7-Day Free Trial <ArrowRight size={20} />
@@ -140,7 +150,7 @@ export default function Landing() {
                 <p className="text-xs text-blue-400 mt-1 font-medium">7-day free trial included</p>
               </div>
               <ul className="space-y-2.5 mb-6 flex-1">
-                {['7-Day Income Training', '8 Online Income Models', 'First Client System', 'Daily Action Plan'].map(f => (
+                {['7-Day Income Training', 'First Client System', 'Daily Action Plan', 'Portfolio', 'Job Applications', 'Client Outreach Strategy', 'A Practical Route to First Income', 'Remote Job System'].map(f => (
                   <li key={f} className="flex items-start gap-2 text-sm text-gray-300">
                     <Check className="text-blue-400 flex-shrink-0 mt-0.5" size={15} />{f}
                   </li>
@@ -161,15 +171,16 @@ export default function Landing() {
                 <span className="text-3xl font-bold text-white">₦15,000</span>
                 <span className="text-gray-400 text-sm ml-1">/ month</span>
               </div>
+              <p className="text-sm font-semibold text-white mb-3">Everything in Fish, plus:</p>
               <ul className="space-y-2.5 mb-6 flex-1">
-                {['High-Income Digital Skills', 'AI & Content Creation', 'Freelancing Blueprint', 'Client Closing Scripts', 'Remote Job System'].map(f => (
+                {['High-Income Digital Skills', 'Generative AI & Content Creation', 'Freelancing Blueprint', 'Client Closing Scripts', 'Remote Job System', 'YouTube Monetisation & Automation', 'Digital Product Creation & Marketing', 'Offer Creation & Scaling'].map(f => (
                   <li key={f} className="flex items-start gap-2 text-sm text-gray-300">
                     <Check className="text-teal-400 flex-shrink-0 mt-0.5" size={15} />{f}
                   </li>
                 ))}
               </ul>
               <p className="text-xs text-teal-400 font-semibold mb-4 text-center">🎯 Earn consistent monthly income.</p>
-              <Link to="/register" className="block w-full border border-teal-500 text-teal-400 hover:bg-teal-500 hover:text-white font-bold py-2.5 rounded-lg text-center transition-colors text-sm">
+              <Link to="/register?plan=dolphin" className="block w-full border border-teal-500 text-teal-400 hover:bg-teal-500 hover:text-white font-bold py-2.5 rounded-lg text-center transition-colors text-sm">
                 Get Started
               </Link>
             </div>
@@ -186,15 +197,16 @@ export default function Landing() {
                 <span className="text-3xl font-bold text-white">₦50,000</span>
                 <span className="text-gray-400 text-sm ml-1">/ month</span>
               </div>
+              <p className="text-sm font-semibold text-white mb-3">Everything in Fish &amp; Dolphin, plus:</p>
               <ul className="space-y-2.5 mb-6 flex-1">
-                {['Digital Products', 'Sales Funnels', 'Traffic Generation', 'High-Ticket Selling', 'Business Automation'].map(f => (
+                {['Sales Funnels', 'Lead Generation Blueprint', 'High-Ticket Selling', 'Business Automation', 'Building & Monetising Tech Solutions'].map(f => (
                   <li key={f} className="flex items-start gap-2 text-sm text-gray-300">
                     <Check className="text-purple-400 flex-shrink-0 mt-0.5" size={15} />{f}
                   </li>
                 ))}
               </ul>
               <p className="text-xs text-purple-400 font-semibold mb-4 text-center">🎯 Build income beyond your time.</p>
-              <Link to="/register" className="block w-full border border-purple-500 text-purple-400 hover:bg-purple-500 hover:text-white font-bold py-2.5 rounded-lg text-center transition-colors text-sm">
+              <Link to="/register?plan=shark" className="block w-full border border-purple-500 text-purple-400 hover:bg-purple-500 hover:text-white font-bold py-2.5 rounded-lg text-center transition-colors text-sm">
                 Get Started
               </Link>
             </div>
@@ -211,6 +223,7 @@ export default function Landing() {
                 <span className="text-3xl font-bold text-white">₦150,000</span>
                 <span className="text-gray-400 text-sm ml-1">/ month</span>
               </div>
+              <p className="text-sm font-semibold text-white mb-3">Everything in Fish, Dolphin &amp; Shark, plus:</p>
               <ul className="space-y-2.5 mb-6 flex-1">
                 {['Multiple Income Streams', 'Authority Brand Building', 'Advanced AI Systems', 'Partnerships & Investments', 'Leadership & Team Building', 'Private Mastermind'].map(f => (
                   <li key={f} className="flex items-start gap-2 text-sm text-gray-300">
@@ -219,7 +232,7 @@ export default function Landing() {
                 ))}
               </ul>
               <p className="text-xs text-amber-400 font-semibold mb-4 text-center">🎯 Build assets, teams, and long-term wealth.</p>
-              <Link to="/register" className="block w-full bg-amber-500 hover:bg-amber-600 text-gray-900 font-bold py-2.5 rounded-lg text-center transition-colors text-sm">
+              <Link to="/register?plan=whale" className="block w-full bg-amber-500 hover:bg-amber-600 text-gray-900 font-bold py-2.5 rounded-lg text-center transition-colors text-sm">
                 Go Elite
               </Link>
             </div>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { CheckCircle, XCircle, Loader } from 'lucide-react';
 import { paymentApi } from '../../services/api';
@@ -13,9 +13,16 @@ export default function SubscribeCallback() {
   const [status, setStatus] = useState<Status>('verifying');
   const [message, setMessage] = useState('');
 
+  // Paystack references can only be verified once, so never check the same one twice
+  // (e.g. on re-renders, or React's double-run of effects in development).
+  const verifiedRef = useRef<string | null>(null);
+
   useEffect(() => {
     const reference = searchParams.get('reference') || searchParams.get('trxref');
     const type = searchParams.get('type');
+
+    if (reference && verifiedRef.current === reference) return;
+    verifiedRef.current = reference;
 
     if (!reference) {
       setStatus('failed');

@@ -3,10 +3,12 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Eye, EyeOff } from 'lucide-react';
 import logo from '../assets/logo.png';
+import { PAID_PLANS, getPaidPlan, afterAuthPath, withPlan } from '../utils/plan';
 
 export default function Register() {
   const [searchParams] = useSearchParams();
   const refCode = searchParams.get('ref') || '';
+  const plan = getPaidPlan(searchParams);
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -45,7 +47,7 @@ export default function Register() {
     setLoading(true);
     try {
       await verifyEmail(email, otp);
-      navigate('/dashboard');
+      navigate(afterAuthPath(plan));
     } catch (err: any) {
       setError(err.message || 'Verification failed. Please try again.');
     } finally {
@@ -64,7 +66,14 @@ export default function Register() {
           {!otpStep ? (
             <>
               <h1 className="text-2xl font-bold text-white mb-2">Create Account</h1>
-              <p className="text-gray-400 mb-6">Start your 7-day free trial today</p>
+              {plan ? (
+                <p className="text-gray-400 mb-6">
+                  Create your account to continue to the{' '}
+                  <span className="text-amber-400 font-semibold">{PAID_PLANS[plan]}</span> plan. You'll go straight to payment after verifying your email.
+                </p>
+              ) : (
+                <p className="text-gray-400 mb-6">Start your 7-day free trial today</p>
+              )}
 
               {error && (
                 <div className="bg-red-900/40 border border-red-500/40 text-red-400 px-4 py-3 rounded-lg mb-5 text-sm">
@@ -147,11 +156,11 @@ export default function Register() {
                   disabled={loading || !agreedToTerms}
                   className="w-full bg-amber-500 hover:bg-amber-600 disabled:opacity-60 text-gray-900 font-bold py-3 rounded-lg transition-colors"
                 >
-                  {loading ? 'Sending OTP...' : 'Start Free Trial'}
+                  {loading ? 'Sending OTP...' : plan ? 'Create Account' : 'Start Free Trial'}
                 </button>
               </form>
               <p className="text-gray-400 text-center mt-6">
-                Already have an account? <Link to="/login" className="text-amber-500 hover:underline">Login</Link>
+                Already have an account? <Link to={withPlan('/login', plan)} className="text-amber-500 hover:underline">Login</Link>
               </p>
             </>
           ) : (
@@ -188,7 +197,7 @@ export default function Register() {
                   disabled={loading || otp.length < 6}
                   className="w-full bg-amber-500 hover:bg-amber-600 disabled:opacity-60 text-gray-900 font-bold py-3 rounded-lg transition-colors"
                 >
-                  {loading ? 'Verifying...' : 'Verify & Create Account'}
+                  {loading ? 'Verifying...' : plan ? 'Verify & Continue to Payment' : 'Verify & Create Account'}
                 </button>
                 <button
                   type="button"
