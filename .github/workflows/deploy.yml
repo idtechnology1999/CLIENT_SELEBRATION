@@ -15,8 +15,10 @@ jobs:
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          # Images live under the kingselo account, so log in with a kingselo
+          # personal access token (scope: write:packages) saved as GHCR_TOKEN.
+          username: kingselo
+          password: ${{ secrets.GHCR_TOKEN }}
       - name: Build and push
         uses: docker/build-push-action@v5
         with:
@@ -24,4 +26,4 @@ jobs:
           push: true
           build-args: |
             VITE_API_URL=${{ vars.VITE_API_URL }}
-          tags: ghcr.io/${{ github.repository_owner }}/selebration-user:latest
+          tags: ghcr.io/kingselo/selebration-user:latest
