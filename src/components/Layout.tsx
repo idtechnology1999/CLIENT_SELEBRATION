@@ -15,15 +15,31 @@ export default function Layout() {
   const [notifLoading, setNotifLoading] = useState(false);
   const unreadCount = notifications.filter(n => !n.read).length;
 
-  const fetchNotifications = async () => {
+  // When the panel is opened (markSeen), unread items stay highlighted while it's
+  // open but are marked read on the server, so the badge clears.
+  const fetchNotifications = async (markSeen = false) => {
     setNotifLoading(true);
     try {
       const res = await notificationApi.list();
       if (res.success && res.data) {
-        setNotifications(res.data as any);
+        setNotifications(res.data);
+        if (markSeen) {
+          res.data.filter(n => !n.read).forEach(n => notificationApi.markRead(n.id).catch(() => {}));
+        }
       }
-    } catch {}
+    } catch {
+      // Keep whatever was shown before; the bell is not critical.
+    }
     setNotifLoading(false);
+  };
+
+  const toggleNotifications = () => {
+    if (showNotif) {
+      setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    } else {
+      fetchNotifications(true);
+    }
+    setShowNotif(!showNotif);
   };
 
   useEffect(() => {
@@ -59,11 +75,11 @@ export default function Layout() {
           <div className="flex items-center gap-4">
             <div className="relative">
               <button
-                onClick={() => { setShowNotif(!showNotif); if (!showNotif) fetchNotifications(); }}
+                onClick={toggleNotifications}
                 className="relative p-2"
               >
                 <Bell size={20} />
-                {unreadCount > 0 && (
+                {unreadCount > 0 && !showNotif && (
                   <span className="absolute top-1 right-1 w-5 h-5 flex items-center justify-center text-[10px] font-bold text-white rounded-full" style={{ background: '#EF4444' }}>
                     {unreadCount}
                   </span>

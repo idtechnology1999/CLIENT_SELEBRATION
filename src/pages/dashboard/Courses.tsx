@@ -303,7 +303,7 @@ export default function Courses() {
                   <div className="flex items-center gap-2 shrink-0 ml-2">
                     {!isUnlocked && (
                       <span className="hidden sm:inline text-xs font-medium text-gray-400">
-                        {st.trial ? 'Free · 7 days' : `₦${st.price.toLocaleString()}`}
+                        ₦{st.price.toLocaleString()}
                       </span>
                     )}
                     {isUnlocked
@@ -311,7 +311,7 @@ export default function Courses() {
                           {st.trial ? '🎉 Trial Active' : 'Unlocked'}
                         </span>
                       : <span className="flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full bg-gray-100 text-gray-400">
-                          <Lock size={9} /> {st.trial ? 'Trial Expired' : 'Locked'}
+                          <Lock size={9} /> {st.trial ? 'Trial Ended' : 'Locked'}
                         </span>
                     }
                     {isExpanded

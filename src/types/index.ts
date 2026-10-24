@@ -9,6 +9,6 @@ export interface User {
   stage: number;
   subscription: 'trial' | 'active' | 'expired' | 'cancelled';
   createdAt: string;
-  trialEndsAt: string;
+  trialEndsAt?: string;
 }
 

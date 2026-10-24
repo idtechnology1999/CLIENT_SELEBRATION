@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { MessageCircle, X, Send, Loader } from 'lucide-react';
 import { io, type Socket } from 'socket.io-client';
 import { useAuth } from '../context/AuthContext';
-import { getToken } from '../services/api';
+import { getToken, chatApi } from '../services/api';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 const SERVER_URL = API_BASE.replace(/\/api$/, '');
@@ -24,6 +24,10 @@ export default function ChatWidget() {
   const [sending, setSending] = useState(false);
   const [loading, setLoading] = useState(false);
   const [unread, setUnread] = useState(0);
+  const [sendError, setSendError] = useState('');
+  // Read inside the socket handler, which is set up once per user.
+  const openRef = useRef(false);
+  useEffect(() => { openRef.current = open; }, [open]);
   const socketRef = useRef<Socket | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -45,17 +49,14 @@ export default function ChatWidget() {
         if (prev.some(m => m._id === data.message._id)) return prev;
         return [...prev, data.message];
       });
-      if (data.message.senderType === 'admin') {
+      if (data.message.senderType === 'admin' && !openRef.current) {
         setUnread(prev => prev + 1);
       }
     });
 
     // Fetch initial unread count
-    fetch(`${API_BASE}/chat/unread-count`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then(r => r.json())
-      .then(d => { if (d.success) setUnread(d.data.count); })
+    chatApi.unreadCount()
+      .then(d => setUnread(d.data.count))
       .catch(() => {});
 
     return () => {
@@ -79,13 +80,11 @@ export default function ChatWidget() {
   const fetchMessages = async () => {
     setLoading(true);
     try {
-      const token = getToken();
-      const res = await fetch(`${API_BASE}/chat/messages`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await res.json();
-      if (data.success) setMessages(data.data);
-    } catch {}
+      const res = await chatApi.getMessages();
+      setMessages(res.data);
+    } catch {
+      // Leave the current messages in place; new ones still arrive over the socket.
+    }
     setLoading(false);
   };
 
@@ -93,22 +92,19 @@ export default function ChatWidget() {
     if (!input.trim() || sending) return;
     const text = input.trim();
     setInput('');
+    setSendError('');
     setSending(true);
     try {
-      const token = getToken();
-      const res = await fetch(`${API_BASE}/chat/send`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ message: text }),
+      const res = await chatApi.send(text);
+      setMessages(prev => {
+        if (prev.some(m => m._id === res.data._id)) return prev;
+        return [...prev, res.data];
       });
-      const data = await res.json();
-      if (data.success) {
-        setMessages(prev => {
-          if (prev.some(m => m._id === data.data._id)) return prev;
-          return [...prev, data.data];
-        });
-      }
-    } catch {}
+    } catch (err) {
+      // Put the text back so the user doesn't have to retype it.
+      setInput(prev => prev || text);
+      setSendError(err instanceof Error && err.message ? err.message : 'Message not sent. Please try again.');
+    }
     setSending(false);
   };
 
@@ -183,6 +179,9 @@ export default function ChatWidget() {
           </div>
 
           {/* Input */}
+          {sendError && (
+            <p className="px-3 pt-2 bg-white text-xs text-red-600 border-t border-gray-100">{sendError}</p>
+          )}
           <div className="px-3 py-3 bg-white border-t border-gray-100 flex items-center gap-2">
             <input
               value={input}

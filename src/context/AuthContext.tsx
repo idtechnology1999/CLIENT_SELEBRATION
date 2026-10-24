@@ -27,7 +27,8 @@ function mapUser(d: any): User {
     stage: d.stage ?? 0,
     subscription: d.subscription ?? 'trial',
     createdAt: d.createdAt ?? new Date().toISOString(),
-    trialEndsAt: d.trialEndsAt ?? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+    // Only show a trial date the server actually sent; never guess one.
+    trialEndsAt: d.trialEndsAt ?? undefined,
   };
 }
 

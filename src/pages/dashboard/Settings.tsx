@@ -84,7 +84,8 @@ export default function Settings() {
             </span>
             {user?.trialEndsAt && user.subscription !== 'active' && (
               <p className="text-xs text-gray-400 mt-1">
-                Trial ends {new Date(user.trialEndsAt).toLocaleDateString()}
+                {new Date(user.trialEndsAt) > new Date() ? 'Trial ends' : 'Trial ended'}{' '}
+                {new Date(user.trialEndsAt).toLocaleDateString()}
               </p>
             )}
           </div>
