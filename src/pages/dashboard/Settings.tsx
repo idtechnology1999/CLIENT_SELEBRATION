@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { User, Lock, Save, Check, AlertCircle, CreditCard } from 'lucide-react';
-import { studentApi } from '../../services/api';
-import SubscribeButton from '../../components/SubscribeButton';
+import { Link } from 'react-router-dom';
+import { studentApi, paymentApi } from '../../services/api';
+import PayStageDialog from '../../components/PayStageDialog';
+import { STAGE_INFO, formatDate, naira, stageKeyFromNumber } from '../../utils/stages';
 
 export default function Settings() {
   const { user, refreshUser } = useAuth();
@@ -16,6 +18,27 @@ export default function Settings() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [pwSaving, setPwSaving] = useState(false);
   const [pwMsg, setPwMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  const [renewOpen, setRenewOpen] = useState(false);
+  const [turningOff, setTurningOff] = useState(false);
+  const [planMsg, setPlanMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  const stageKey = stageKeyFromNumber(user?.stage ?? 0);
+  const stage = stageKey ? STAGE_INFO[stageKey] : null;
+
+  const turnOffAutoRenew = async () => {
+    setPlanMsg(null);
+    setTurningOff(true);
+    try {
+      const res = await paymentApi.turnOffAutoRenew();
+      await refreshUser();
+      setPlanMsg({ type: 'success', text: res.message });
+    } catch (err) {
+      setPlanMsg({ type: 'error', text: err instanceof Error ? err.message : 'Could not turn off automatic renewal' });
+    } finally {
+      setTurningOff(false);
+    }
+  };
 
   const handleProfileSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -64,36 +87,73 @@ export default function Settings() {
         <p className="text-gray-500">Manage your account preferences</p>
       </div>
 
-      {/* Subscription status */}
+      {/* My plan */}
+      {renewOpen && stageKey && (
+        <PayStageDialog stage={stageKey} action="renew" onClose={() => setRenewOpen(false)} />
+      )}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="p-5 border-b border-gray-100 flex items-center gap-2">
           <CreditCard className="text-amber-500" size={20} />
-          <h2 className="text-lg font-bold">Subscription</h2>
+          <h2 className="text-lg font-bold">My Plan</h2>
         </div>
-        <div className="p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div>
-            <p className="text-sm text-gray-500 mb-1">Current plan</p>
-            <span className={`px-3 py-1 rounded-full text-sm font-semibold capitalize ${
-              user?.subscription === 'active'
-                ? 'bg-green-100 text-green-700'
-                : user?.subscription === 'trial'
-                ? 'bg-blue-100 text-blue-700'
-                : 'bg-gray-100 text-gray-600'
-            }`}>
-              {user?.subscription ?? 'trial'}
-            </span>
-            {user?.trialEndsAt && user.subscription !== 'active' && (
-              <p className="text-xs text-gray-400 mt-1">
-                {new Date(user.trialEndsAt) > new Date() ? 'Trial ends' : 'Trial ended'}{' '}
-                {new Date(user.trialEndsAt).toLocaleDateString()}
-              </p>
-            )}
-          </div>
-          {user?.subscription !== 'active' && (
-            <SubscribeButton
-              label="Upgrade — ₦5,000/mo"
-              className="bg-amber-500 hover:bg-amber-600 text-white px-6 py-2.5 rounded-lg"
-            />
+        <div className="p-5 space-y-4">
+          {planMsg && (
+            <div className={`flex items-center gap-2 px-4 py-3 rounded-lg text-sm ${planMsg.type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
+              {planMsg.type === 'success' ? <Check size={16} /> : <AlertCircle size={16} />}
+              {planMsg.text}
+            </div>
+          )}
+
+          {stage && stageKey ? (
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="space-y-1">
+                <p className="text-sm text-gray-500">Current plan</p>
+                <p className="text-lg font-bold text-gray-900">
+                  {stage.icon} {stage.label} <span className="text-sm font-normal text-gray-500">· {naira(stage.price)}/month</span>
+                </p>
+                {user?.paidUp ? (
+                  <p className="text-sm text-gray-600">
+                    {user.autoRenewActive ? 'Renews automatically on ' : 'Paid until '}
+                    <span className="font-medium">{formatDate(user.paidUntil)}</span>
+                  </p>
+                ) : (
+                  <p className="text-sm text-red-600">Ended {formatDate(user?.paidUntil)} — renew to unlock your courses again.</p>
+                )}
+                <p className="text-xs text-gray-400">
+                  Renewal: {user?.autoRenewActive ? 'automatic (card)' : 'manual — we remind you before it ends'}
+                </p>
+              </div>
+              <div className="flex flex-col sm:items-end gap-2 w-full sm:w-auto">
+                {!user?.autoRenewActive && (
+                  <button onClick={() => setRenewOpen(true)} className="bg-amber-500 hover:bg-amber-600 text-white font-semibold px-5 py-2.5 rounded-lg">
+                    {user?.paidUp ? 'Renew for another month' : `Renew ${stage.label}`}
+                  </button>
+                )}
+                {user?.autoRenewActive && (
+                  <button onClick={turnOffAutoRenew} disabled={turningOff} className="border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-60 font-medium px-5 py-2.5 rounded-lg">
+                    {turningOff ? 'Turning off…' : 'Turn off automatic renewal'}
+                  </button>
+                )}
+                {stageKey !== 'whale' && (
+                  <Link to="/dashboard/courses" className="text-sm text-amber-600 hover:underline">Upgrade to a higher stage →</Link>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div>
+                <p className="text-sm text-gray-500 mb-1">Current plan</p>
+                <p className="font-semibold text-gray-900">{user?.subscription === 'trial' ? '🐟 Free trial (Fish)' : 'No active plan'}</p>
+                {user?.trialEndsAt && (
+                  <p className="text-xs text-gray-400 mt-1">
+                    {new Date(user.trialEndsAt) > new Date() ? 'Trial ends' : 'Trial ended'} {formatDate(user.trialEndsAt)}
+                  </p>
+                )}
+              </div>
+              <Link to="/dashboard/courses" className="bg-amber-500 hover:bg-amber-600 text-white font-semibold px-5 py-2.5 rounded-lg">
+                Choose a plan
+              </Link>
+            </div>
           )}
         </div>
       </div>

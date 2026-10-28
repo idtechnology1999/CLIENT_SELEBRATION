@@ -3,18 +3,19 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { TrendingUp, Users, DollarSign, BookOpen, ArrowRight, Gift, AlertCircle } from 'lucide-react';
 import { studentApi, fixUrl } from '../../services/api';
+import { STAGE_INFO, stageKeyFromNumber } from '../../utils/stages';
 
 interface DashboardData {
   stats: { totalEarned: number; pending: number; withdrawable: number; withdrawn: number };
   referralCount: number;
   stage: number;
   subscription: string;
-  trialEndsAt: string;
+  trialEndsAt?: string;
+  paidUntil?: string;
   coursesCount: number;
   courses: { id: string; name: string; thumbnail?: string; price: number; modulesCount: number }[];
 }
 
-const STAGE_LABELS = ['Starter', 'Stage 1', 'Stage 2', 'Stage 3', 'Stage 4', 'Stage 5'];
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -31,6 +32,10 @@ export default function Dashboard() {
 
   const stage = data?.stage ?? user?.stage ?? 0;
   const stats = data?.stats ?? { totalEarned: 0, pending: 0, withdrawable: 0, withdrawn: 0 };
+  const stageKey = stageKeyFromNumber(stage);
+  const stageLabel = stageKey
+    ? `${STAGE_INFO[stageKey].icon} ${STAGE_INFO[stageKey].label}${user && !user.paidUp ? ' (ended)' : ''}`
+    : user?.subscription === 'trial' ? '🐟 Free trial' : 'No plan yet';
 
   return (
     <div className="space-y-6">
@@ -41,7 +46,7 @@ export default function Dashboard() {
         </div>
         <div className="flex items-center gap-2 bg-amber-50 px-4 py-2 rounded-lg">
           <Gift className="text-amber-500" size={20} />
-          <span className="font-medium text-amber-700">{STAGE_LABELS[stage] || `Stage ${stage}`}</span>
+          <span className="font-medium text-amber-700">{stageLabel}</span>
         </div>
       </div>
 

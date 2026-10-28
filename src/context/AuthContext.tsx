@@ -1,12 +1,15 @@
 import { createContext, useContext, useState, useEffect, useCallback, useMemo, type ReactNode } from 'react';
 import type { User } from '../types';
-import { userAuthApi, getToken, setToken, clearToken } from '../services/api';
+import { userAuthApi, getToken, setToken, clearToken, setSignupToken, clearSignupToken } from '../services/api';
 
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  // Returns 'signup' when the account still has to finish paying or confirm its email.
+  login: (email: string, password: string) => Promise<'ok' | 'signup'>;
+  // Log in with a token from a finished sign-up (email code confirmed).
+  loginWithToken: (token: string, data: unknown) => void;
   register: (name: string, email: string, phone: string, password: string, refCode?: string) => Promise<void>;
   verifyEmail: (email: string, otp: string) => Promise<void>;
   logout: () => void;
@@ -29,6 +32,11 @@ function mapUser(d: any): User {
     createdAt: d.createdAt ?? new Date().toISOString(),
     // Only show a trial date the server actually sent; never guess one.
     trialEndsAt: d.trialEndsAt ?? undefined,
+    paidUntil: d.paidUntil ?? undefined,
+    paidUp: !!d.paidUp,
+    unlockedStages: Array.isArray(d.unlockedStages) ? d.unlockedStages : [],
+    renewal: d.renewal === 'auto' ? 'auto' : 'manual',
+    autoRenewActive: !!d.autoRenewActive,
   };
 }
 
@@ -51,10 +59,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Functions are memoized so pages that list them as effect dependencies
   // don't re-run every time the user object changes.
-  const login = useCallback(async (email: string, password: string) => {
+  const login = useCallback(async (email: string, password: string): Promise<'ok' | 'signup'> => {
     const res = await userAuthApi.login(email, password);
-    setToken(res.token);
+    if (res.signup) {
+      setSignupToken(res.signup.token);
+      return 'signup';
+    }
+    setToken(res.token!);
     setUser(mapUser(res.data));
+    return 'ok';
+  }, []);
+
+  const loginWithToken = useCallback((token: string, data: unknown) => {
+    clearSignupToken();
+    setToken(token);
+    setUser(mapUser(data));
   }, []);
 
   const register = useCallback(async (name: string, email: string, phone: string, password: string, refCode?: string) => {
@@ -78,8 +97,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo(
-    () => ({ user, isAuthenticated: !!user, loading, login, register, verifyEmail, logout, refreshUser }),
-    [user, loading, login, register, verifyEmail, logout, refreshUser],
+    () => ({ user, isAuthenticated: !!user, loading, login, loginWithToken, register, verifyEmail, logout, refreshUser }),
+    [user, loading, login, loginWithToken, register, verifyEmail, logout, refreshUser],
   );
 
   return (

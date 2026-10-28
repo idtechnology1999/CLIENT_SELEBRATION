@@ -3,7 +3,11 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Eye, EyeOff } from 'lucide-react';
 import logo from '../assets/logo.png';
-import { PAID_PLANS, getPaidPlan, afterAuthPath, withPlan } from '../utils/plan';
+import { getPaidPlan, afterAuthPath, withPlan } from '../utils/plan';
+import { signupApi, setSignupToken } from '../services/api';
+import { STAGE_INFO, naira } from '../utils/stages';
+import RenewalOptions from '../components/RenewalOptions';
+import type { Renewal } from '../types';
 
 export default function Register() {
   const [searchParams] = useSearchParams();
@@ -19,6 +23,7 @@ export default function Register() {
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [renewal, setRenewal] = useState<Renewal>('auto');
 
   // OTP verification step
   const [otpStep, setOtpStep] = useState(false);
@@ -31,6 +36,22 @@ export default function Register() {
     e.preventDefault();
     setError('');
     setLoading(true);
+
+    // Paid plan: create the account and go straight to Paystack; the email is confirmed after paying.
+    if (plan) {
+      try {
+        const res = await signupApi.registerPaid({
+          name, email, phone, password, referralCode: referralCode || undefined, stage: plan, renewal,
+        });
+        setSignupToken(res.data.signupToken);
+        window.location.href = res.data.authorizationUrl;
+      } catch (err: any) {
+        setError(err.message || 'Could not start your sign-up. Please try again.');
+        setLoading(false);
+      }
+      return;
+    }
+
     try {
       await register(name, email, phone, password, referralCode || undefined);
       setOtpStep(true);
@@ -68,8 +89,9 @@ export default function Register() {
               <h1 className="text-2xl font-bold text-white mb-2">Create Account</h1>
               {plan ? (
                 <p className="text-gray-400 mb-6">
-                  Create your account to continue to the{' '}
-                  <span className="text-amber-400 font-semibold">{PAID_PLANS[plan]}</span> plan. You'll go straight to payment after verifying your email.
+                  Create your account for the{' '}
+                  <span className="text-amber-400 font-semibold">{STAGE_INFO[plan].icon} {STAGE_INFO[plan].label}</span> plan
+                  ({naira(STAGE_INFO[plan].price)}/month). You'll pay next, then confirm your email.
                 </p>
               ) : (
                 <p className="text-gray-400 mb-6">Start your 7-day free trial today</p>
@@ -137,6 +159,7 @@ export default function Register() {
                     className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-amber-500"
                   />
                 </div>
+                {plan && <RenewalOptions value={renewal} onChange={setRenewal} theme="dark" />}
                 <label className="flex items-start gap-3 cursor-pointer">
                   <input
                     type="checkbox"
@@ -156,7 +179,9 @@ export default function Register() {
                   disabled={loading || !agreedToTerms}
                   className="w-full bg-amber-500 hover:bg-amber-600 disabled:opacity-60 text-gray-900 font-bold py-3 rounded-lg transition-colors"
                 >
-                  {loading ? 'Sending OTP...' : plan ? 'Create Account' : 'Start Free Trial'}
+                  {plan
+                    ? (loading ? 'Opening Paystack...' : `Continue to Payment — ${naira(STAGE_INFO[plan].price)}`)
+                    : (loading ? 'Sending OTP...' : 'Start Free Trial')}
                 </button>
               </form>
               <p className="text-gray-400 text-center mt-6">
@@ -197,7 +222,7 @@ export default function Register() {
                   disabled={loading || otp.length < 6}
                   className="w-full bg-amber-500 hover:bg-amber-600 disabled:opacity-60 text-gray-900 font-bold py-3 rounded-lg transition-colors"
                 >
-                  {loading ? 'Verifying...' : plan ? 'Verify & Continue to Payment' : 'Verify & Create Account'}
+                  {loading ? 'Verifying...' : 'Verify & Create Account'}
                 </button>
                 <button
                   type="button"

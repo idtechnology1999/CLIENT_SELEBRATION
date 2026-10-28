@@ -15,6 +15,7 @@ import Earnings from './pages/dashboard/Earnings';
 import Withdraw from './pages/dashboard/Withdraw';
 import Settings from './pages/dashboard/Settings';
 import SubscribeCallback from './pages/dashboard/SubscribeCallback';
+import SignupComplete from './pages/SignupComplete';
 import { getPaidPlan, afterAuthPath } from './utils/plan';
 
 function LoadingScreen() {
@@ -53,6 +54,8 @@ function AppRoutes() {
       <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
       <Route path="/privacy" element={<PrivacyPolicy />} />
       <Route path="/terms" element={<Terms />} />
+      {/* Paystack sends plan buyers here after paying (or cancelling) */}
+      <Route path="/signup/complete" element={<SignupComplete />} />
       <Route path="/forgot-password" element={<PublicRoute><ForgotPassword /></PublicRoute>} />
       <Route path="/reset-password" element={<PublicRoute><ResetPassword /></PublicRoute>} />
 

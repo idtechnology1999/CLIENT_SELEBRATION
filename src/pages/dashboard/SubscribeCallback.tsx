@@ -35,23 +35,26 @@ export default function SubscribeCallback() {
       setMessage(err.message || 'Payment verification failed. Contact support if you were charged.');
     };
 
+    if (searchParams.get('cancelled')) {
+      setStatus('failed');
+      setMessage('You cancelled the payment. Nothing was charged.');
+      return;
+    }
+
     if (type === 'module') {
       paymentApi.verifyModulePayment(reference)
         .then(res => { setStatus('success'); setMessage(res.message || 'Module unlocked!'); })
         .catch(fail);
-    } else if (type === 'stage') {
-      paymentApi.verifyStageUpgrade(reference)
-        .then(async res => { await refreshUser(); setStatus('success'); setMessage(res.message || 'Stage unlocked!'); })
-        .catch(fail);
     } else {
-      paymentApi.verifySubscription(reference)
-        .then(async res => { await refreshUser(); setStatus('success'); setMessage(res.message || 'Subscription activated!'); })
+      // Stage payments (upgrade, renewal). Safe even if Paystack's webhook got there first.
+      paymentApi.verifyStageUpgrade(reference)
+        .then(async res => { await refreshUser(); setStatus('success'); setMessage(res.message || 'Plan active!'); })
         .catch(fail);
     }
   }, [searchParams, refreshUser]);
 
   const isModule = searchParams.get('type') === 'module';
-  const isStage = searchParams.get('type') === 'stage';
+  const isStage = searchParams.get('type') !== 'module';
 
   return (
     <div className="min-h-[60vh] flex items-center justify-center">
@@ -68,7 +71,7 @@ export default function SubscribeCallback() {
           <>
             <CheckCircle className="mx-auto text-green-500 mb-4" size={52} />
             <h2 className="text-xl font-bold text-gray-900 mb-2">
-              {isModule ? 'Module Unlocked!' : isStage ? 'Stage Unlocked!' : 'Payment Confirmed!'}
+              {isModule ? 'Module Unlocked!' : isStage ? 'Plan Active!' : 'Payment Confirmed!'}
             </h2>
             <p className="text-gray-500 mb-6">{message}</p>
             <button
@@ -93,7 +96,7 @@ export default function SubscribeCallback() {
                 Back to Courses
               </button>
               <button
-                onClick={() => navigate('/dashboard/settings')}
+                onClick={() => navigate('/dashboard/courses')}
                 className="bg-amber-500 hover:bg-amber-600 text-white font-bold px-6 py-3 rounded-xl"
               >
                 Try Again

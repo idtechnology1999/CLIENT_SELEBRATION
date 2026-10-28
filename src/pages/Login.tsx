@@ -21,8 +21,9 @@ export default function Login() {
     setError('');
     setLoading(true);
     try {
-      await login(email, password);
-      navigate(afterAuthPath(plan));
+      const result = await login(email, password);
+      // Bought a plan but hasn't finished paying / confirming the email yet.
+      navigate(result === 'signup' ? '/signup/complete' : afterAuthPath(plan));
     } catch (err: any) {
       setError(err.message || 'Invalid email or password');
     } finally {

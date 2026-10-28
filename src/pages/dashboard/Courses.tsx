@@ -1,20 +1,26 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Play, Lock, BookOpen, AlertCircle, ChevronLeft, ChevronDown, ChevronUp, Loader } from 'lucide-react';
-import { studentApi, paymentApi, fixUrl } from '../../services/api';
+import { Play, Lock, BookOpen, AlertCircle, ChevronLeft, ChevronDown, ChevronUp } from 'lucide-react';
+import { studentApi, fixUrl } from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
+import PayStageDialog from '../../components/PayStageDialog';
+import type { StageKey } from '../../types';
 
-const STAGES = [
-  { key: 'fish',    label: 'Become a Fish',    price: 5000,   trial: true,  bg: 'bg-blue-50',   border: 'border-blue-300',   badge: 'bg-blue-100 text-blue-700',    icon: '🐟' },
-  { key: 'dolphin', label: 'Become a Dolphin', price: 15000,  trial: false, bg: 'bg-teal-50',   border: 'border-teal-300',   badge: 'bg-teal-100 text-teal-700',    icon: '🐬' },
-  { key: 'shark',   label: 'Become a Shark',   price: 50000,  trial: false, bg: 'bg-purple-50', border: 'border-purple-300', badge: 'bg-purple-100 text-purple-700', icon: '🦈' },
-  { key: 'whale',   label: 'Become a Whale',   price: 150000, trial: false, bg: 'bg-amber-50',  border: 'border-amber-300',  badge: 'bg-amber-100 text-amber-700',  icon: '🐋' },
+const STAGES: { key: StageKey; num: number; label: string; price: number; trial: boolean; bg: string; border: string; badge: string; icon: string }[] = [
+  { key: 'fish',    num: 1, label: 'Become a Fish',    price: 5000,   trial: true,  bg: 'bg-blue-50',   border: 'border-blue-300',   badge: 'bg-blue-100 text-blue-700',    icon: '🐟' },
+  { key: 'dolphin', num: 2, label: 'Become a Dolphin', price: 15000,  trial: false, bg: 'bg-teal-50',   border: 'border-teal-300',   badge: 'bg-teal-100 text-teal-700',    icon: '🐬' },
+  { key: 'shark',   num: 3, label: 'Become a Shark',   price: 50000,  trial: false, bg: 'bg-purple-50', border: 'border-purple-300', badge: 'bg-purple-100 text-purple-700', icon: '🦈' },
+  { key: 'whale',   num: 4, label: 'Become a Whale',   price: 150000, trial: false, bg: 'bg-amber-50',  border: 'border-amber-300',  badge: 'bg-amber-100 text-amber-700',  icon: '🐋' },
 ];
 
 interface Video { _id: string; title: string; description: string; videoUrl: string; }
 interface StageData { stage: string; unlocked: boolean; videos: Video[]; videoCount: number; }
 interface Course { id: string; title: string; thumbnail?: string; description?: string; stages: StageData[]; }
 
+type PayAction = 'upgrade' | 'renew' | 'pay';
+
 export default function Courses() {
+  const { user } = useAuth();
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -22,8 +28,7 @@ export default function Courses() {
   const [playingVideo, setPlayingVideo] = useState<Video | null>(null);
   const [expandedStages, setExpandedStages] = useState<Record<string, boolean>>({ fish: true });
   const [lockedAlert, setLockedAlert] = useState('');
-  const [upgradingStage, setUpgradingStage] = useState<string | null>(null);
-  const [upgradeError, setUpgradeError] = useState('');
+  const [payDialog, setPayDialog] = useState<{ stage: StageKey; action: PayAction } | null>(null);
 
   useEffect(() => {
     studentApi.getCourses()
@@ -40,28 +45,39 @@ export default function Courses() {
     setPlayingVideo(null);
     setExpandedStages({ [fromStageKey]: true });
     setLockedAlert('');
-    setUpgradeError('');
   };
 
-  const handleUpgrade = async (stageKey: string) => {
-    setUpgradingStage(stageKey);
-    setUpgradeError('');
-    try {
-      const res = await paymentApi.initStageUpgrade(stageKey);
-      if (res.success && res.data?.authorizationUrl) {
-        window.location.href = res.data.authorizationUrl;
-      } else {
-        setUpgradeError((res as any).message || 'Failed to start payment');
-        setUpgradingStage(null);
-      }
-    } catch (err: any) {
-      setUpgradeError(err.message || 'Failed to start payment');
-      setUpgradingStage(null);
-    }
+  const ownedStage = user?.stage ?? 0;
+  const neverPaid = ownedStage === 0;
+
+  // Renew = same stage they had, upgrade = higher, pay = anything else (e.g. after the trial).
+  const actionFor = (st: typeof STAGES[number]): PayAction =>
+    ownedStage >= 1 && st.num === ownedStage ? 'renew' : st.num > ownedStage && ownedStage >= 1 ? 'upgrade' : 'pay';
+
+  const handleUpgrade = (stageKey: StageKey) => {
+    const st = STAGES.find(s => s.key === stageKey);
+    if (st) setPayDialog({ stage: st.key, action: actionFor(st) });
   };
+
+  // Text and button for a locked stage, depending on the account's situation.
+  const lockedCopy = (st: typeof STAGES[number], videoCount?: number) => {
+    const price = `₦${st.price.toLocaleString()}`;
+    const videos = videoCount !== undefined ? ` ${videoCount} video${videoCount !== 1 ? 's' : ''}` : '';
+    const name = st.label.replace('Become a ', '');
+    if (ownedStage >= st.num) {
+      return { note: `Your monthly plan has ended — renew to unlock${videos || ' this stage'} again (${price}/month)`, button: `Renew ${name} →` };
+    }
+    if (st.trial && neverPaid) {
+      return { note: `Your 7-day free trial has ended — pay ${price}/month to unlock${videos || ' Fish'}`, button: `Continue as Fish — ${price} →` };
+    }
+    return { note: `Upgrade to unlock${videos || ' this stage'} — ${price}/month`, button: `Upgrade to ${name} →` };
+  };
+
+  const isStageUnlocked = (key: StageKey) =>
+    (user?.unlockedStages ?? []).includes(key) || courses.some(c => c.stages.some(s => s.stage === key && s.unlocked));
 
   // Coming from a plan button on the landing page (?upgrade=shark):
-  // open that stage and start its payment, unless the user already has it.
+  // open that stage and offer its payment, unless the user already has it.
   const [searchParams, setSearchParams] = useSearchParams();
   const upgradeParam = searchParams.get('upgrade');
   const autoUpgradeDone = useRef(false);
@@ -75,9 +91,8 @@ export default function Courses() {
     if (!stage) return;
     setExpandedStages({ [stage.key]: true });
 
-    const alreadyUnlocked = courses.some(c => c.stages.some(s => s.stage === stage.key && s.unlocked));
-    if (!alreadyUnlocked) handleUpgrade(stage.key);
-  }, [loading, upgradeParam, courses, setSearchParams]);
+    if (!isStageUnlocked(stage.key)) handleUpgrade(stage.key);
+  }, [loading, upgradeParam, courses, setSearchParams]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (loading) return (
     <div className="space-y-3">
@@ -107,9 +122,10 @@ export default function Courses() {
 
     return (
       <div className="space-y-4 max-w-2xl mx-auto w-full">
+        {payDialog && <PayStageDialog stage={payDialog.stage} action={payDialog.action} onClose={() => setPayDialog(null)} />}
 
         {/* Back */}
-        <button onClick={() => { setSelectedCourse(null); setPlayingVideo(null); setLockedAlert(''); setUpgradeError(''); }}
+        <button onClick={() => { setSelectedCourse(null); setPlayingVideo(null); setLockedAlert(''); }}
           className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 transition-colors">
           <ChevronLeft size={15} /> Back to courses
         </button>
@@ -152,14 +168,7 @@ export default function Courses() {
           </div>
         )}
 
-        {/* Errors / alerts */}
-        {upgradeError && (
-          <div className="flex items-center gap-3 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
-            <AlertCircle size={15} className="shrink-0" />
-            <p className="flex-1">{upgradeError}</p>
-            <button onClick={() => setUpgradeError('')} className="text-red-400 hover:text-red-600 shrink-0">✕</button>
-          </div>
-        )}
+        {/* Alerts */}
         {lockedAlert && (
           <div className="flex items-center gap-3 bg-orange-50 border border-orange-200 text-orange-700 px-4 py-3 rounded-xl text-sm">
             <Lock size={15} className="shrink-0" />
@@ -216,23 +225,12 @@ export default function Courses() {
                 ))}
               </div>
               <div className="px-4 sm:px-5 py-3 border-t border-gray-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
-                <p className="text-xs text-gray-400">
-                  {activeStageDef.trial
-                    ? `Your 7-day free trial has ended — pay ₦${activeStageDef.price.toLocaleString()} to unlock ${videoCount} video${videoCount !== 1 ? 's' : ''}`
-                    : `Upgrade to unlock ${videoCount} video${videoCount !== 1 ? 's' : ''} — ₦${activeStageDef.price.toLocaleString()}`
-                  }
-                </p>
+                <p className="text-xs text-gray-400">{lockedCopy(activeStageDef, videoCount).note}</p>
                 <button
                   onClick={() => handleUpgrade(activeStageDef.key)}
-                  disabled={upgradingStage === activeStageDef.key}
-                  className="shrink-0 px-4 py-1.5 rounded-lg text-xs font-semibold text-white whitespace-nowrap flex items-center gap-1.5 disabled:opacity-70"
+                  className="shrink-0 px-4 py-1.5 rounded-lg text-xs font-semibold text-white whitespace-nowrap"
                   style={{ background: '#F5820A' }}>
-                  {upgradingStage === activeStageDef.key
-                    ? <><Loader size={11} className="animate-spin" /> Processing...</>
-                    : activeStageDef.trial
-                      ? <>Continue as Fish — ₦{activeStageDef.price.toLocaleString()} →</>
-                      : <>Upgrade to {activeStageDef.label} →</>
-                  }
+                  {lockedCopy(activeStageDef, videoCount).button}
                 </button>
               </div>
             </div>
@@ -245,16 +243,16 @@ export default function Courses() {
   // ── Stage list (default view) ──────────────────────────────────────────────
   return (
     <div className="space-y-5">
+      {payDialog && <PayStageDialog stage={payDialog.stage} action={payDialog.action} onClose={() => setPayDialog(null)} />}
       <div>
         <h1 className="text-xl sm:text-2xl font-bold text-gray-900">My Courses</h1>
         <p className="text-gray-500 text-sm mt-0.5">Select a stage to browse your courses</p>
       </div>
 
-      {upgradeError && (
-        <div className="flex items-center gap-3 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
+      {user && !user.paidUp && user.stage >= 1 && (
+        <div className="flex items-center gap-3 bg-amber-50 border border-amber-200 text-amber-800 px-4 py-3 rounded-xl text-sm">
           <AlertCircle size={15} className="shrink-0" />
-          <p className="flex-1">{upgradeError}</p>
-          <button onClick={() => setUpgradeError('')} className="text-red-400 hover:text-red-600 shrink-0">✕</button>
+          <p className="flex-1">Your monthly plan has ended. Renew to unlock your courses again.</p>
         </div>
       )}
 
@@ -269,10 +267,7 @@ export default function Courses() {
             const stageCourses = courses.filter(c =>
               c.stages.some(s => s.stage === st.key && s.videoCount > 0)
             );
-            // Stage unlock is global — a stage is unlocked if any course reflects it as unlocked
-            const isUnlocked = courses.some(c =>
-              c.stages.some(s => s.stage === st.key && s.unlocked)
-            );
+            const isUnlocked = isStageUnlocked(st.key);
             const totalVideos = stageCourses.reduce((n, c) => {
               const s = c.stages.find(s => s.stage === st.key);
               return n + (s?.videoCount ?? 0);
@@ -308,10 +303,10 @@ export default function Courses() {
                     )}
                     {isUnlocked
                       ? <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${st.badge}`}>
-                          {st.trial ? '🎉 Trial Active' : 'Unlocked'}
+                          {st.trial && user?.subscription === 'trial' ? '🎉 Trial Active' : 'Unlocked'}
                         </span>
                       : <span className="flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full bg-gray-100 text-gray-400">
-                          <Lock size={9} /> {st.trial ? 'Trial Ended' : 'Locked'}
+                          <Lock size={9} /> {st.trial && neverPaid ? 'Trial Ended' : ownedStage >= st.num ? 'Expired' : 'Locked'}
                         </span>
                     }
                     {isExpanded
@@ -367,39 +362,13 @@ export default function Courses() {
                       {/* Upgrade footer for locked stages */}
                       {!isUnlocked && (
                         <div className="px-4 sm:px-5 py-3 border-t border-gray-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
-                          {st.trial ? (
-                            <>
-                              <p className="text-xs text-gray-400">
-                                Your 7-day free trial has ended — pay ₦{st.price.toLocaleString()} to continue
-                              </p>
-                              <button
-                                onClick={() => handleUpgrade(st.key)}
-                                disabled={upgradingStage === st.key}
-                                className="shrink-0 px-4 py-1.5 rounded-lg text-xs font-semibold text-white whitespace-nowrap flex items-center gap-1.5 disabled:opacity-70"
-                                style={{ background: '#F5820A' }}>
-                                {upgradingStage === st.key
-                                  ? <><Loader size={11} className="animate-spin" /> Processing...</>
-                                  : <>Continue as Fish — ₦{st.price.toLocaleString()} →</>
-                                }
-                              </button>
-                            </>
-                          ) : (
-                            <>
-                              <p className="text-xs text-gray-400">
-                                Upgrade to unlock — ₦{st.price.toLocaleString()}
-                              </p>
-                              <button
-                                onClick={() => handleUpgrade(st.key)}
-                                disabled={upgradingStage === st.key}
-                                className="shrink-0 px-4 py-1.5 rounded-lg text-xs font-semibold text-white whitespace-nowrap flex items-center gap-1.5 disabled:opacity-70"
-                                style={{ background: '#F5820A' }}>
-                                {upgradingStage === st.key
-                                  ? <><Loader size={11} className="animate-spin" /> Processing...</>
-                                  : <>Upgrade to {st.label} →</>
-                                }
-                              </button>
-                            </>
-                          )}
+                          <p className="text-xs text-gray-400">{lockedCopy(st).note}</p>
+                          <button
+                            onClick={() => handleUpgrade(st.key)}
+                            className="shrink-0 px-4 py-1.5 rounded-lg text-xs font-semibold text-white whitespace-nowrap"
+                            style={{ background: '#F5820A' }}>
+                            {lockedCopy(st).button}
+                          </button>
                         </div>
                       )}
                     </div>

@@ -1,3 +1,5 @@
+import type { Renewal, StageKey } from '../types';
+
 const BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 const SERVER_BASE = BASE.replace(/\/api$/, '');
 
@@ -7,14 +9,21 @@ export function fixUrl(url?: string): string | undefined {
 }
 
 const TOKEN_KEY = 'selliberation_user_token';
+// Limited token for someone who bought a plan but hasn't confirmed their email yet.
+// It only works on the sign-up payment/confirmation screens.
+const SIGNUP_TOKEN_KEY = 'selliberation_signup_token';
 
 export const getToken = () => localStorage.getItem(TOKEN_KEY);
 export const setToken = (t: string) => localStorage.setItem(TOKEN_KEY, t);
 export const clearToken = () => localStorage.removeItem(TOKEN_KEY);
 
-async function req<T>(method: string, path: string, body?: unknown): Promise<T> {
+export const getSignupToken = () => localStorage.getItem(SIGNUP_TOKEN_KEY);
+export const setSignupToken = (t: string) => localStorage.setItem(SIGNUP_TOKEN_KEY, t);
+export const clearSignupToken = () => localStorage.removeItem(SIGNUP_TOKEN_KEY);
+
+async function req<T>(method: string, path: string, body?: unknown, tokenOverride?: string | null): Promise<T> {
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-  const token = getToken();
+  const token = tokenOverride === undefined ? getToken() : tokenOverride;
   if (token) headers['Authorization'] = `Bearer ${token}`;
 
   const res = await fetch(`${BASE}${path}`, {
@@ -35,8 +44,10 @@ export const userAuthApi = {
   verifyEmail: (email: string, otp: string) =>
     req<{ success: true; token: string; data: any }>('POST', '/user-auth/verify-email', { email, otp }),
 
+  // Either a normal login (token + data), or `signup` when the account still has to
+  // finish paying / confirm its email.
   login: (email: string, password: string) =>
-    req<{ success: true; token: string; data: any }>('POST', '/user-auth/login', { email, password }),
+    req<{ success: true; token?: string; data?: any; signup?: { token: string; email: string; stage: string } }>('POST', '/user-auth/login', { email, password }),
 
   me: () =>
     req<{ success: true; data: any }>('GET', '/user-auth/me'),
@@ -48,21 +59,39 @@ export const userAuthApi = {
     req<{ success: true; message: string }>('POST', '/user-auth/reset-password', { token, password }),
 };
 
+export type SignupState = 'paid' | 'pending' | 'failed';
+
+// Buying a plan without an account: sign up → Paystack → confirm email.
+export const signupApi = {
+  registerPaid: (payload: { name: string; email: string; phone: string; password: string; referralCode?: string; stage: StageKey; renewal: Renewal }) =>
+    req<{ success: true; data: { signupToken: string; authorizationUrl: string; reference: string } }>('POST', '/user-auth/register-paid', payload, null),
+
+  status: () =>
+    req<{ success: true; data: { state: SignupState; stage: string; email?: string; emailVerified?: boolean } }>('GET', '/user-auth/signup/status', undefined, getSignupToken()),
+
+  resendCode: () =>
+    req<{ success: true; message: string }>('POST', '/user-auth/signup/resend-code', undefined, getSignupToken()),
+
+  changeEmail: (email: string) =>
+    req<{ success: true; data: { email: string; signupToken: string } }>('POST', '/user-auth/signup/change-email', { email }, getSignupToken()),
+
+  verify: (code: string) =>
+    req<{ success: true; token: string; data: any }>('POST', '/user-auth/signup/verify', { code }, getSignupToken()),
+};
+
 export const paymentApi = {
-  initSubscription: () =>
-    req<{ success: true; data: { authorizationUrl: string; reference: string; amount: number } }>('POST', '/payment/init'),
-
-  verifySubscription: (reference: string) =>
-    req<{ success: true; message: string; data: { reference: string; amount: number } }>('GET', `/payment/verify?reference=${encodeURIComponent(reference)}`),
-
   verifyAccount: (accountNumber: string, bankCode: string) =>
     req<{ success: true; data: { account_name: string; account_number: string } }>('POST', '/payment/verify-account', { accountNumber, bankCode }),
 
-  initStageUpgrade: (stage: string) =>
-    req<{ success: true; data: { authorizationUrl: string; reference: string; amount: number } }>('POST', '/payment/init-stage', { stage }),
+  // Upgrade, renew, or pay again after the month ran out.
+  initStageUpgrade: (stage: StageKey, renewal: Renewal) =>
+    req<{ success: true; data: { authorizationUrl: string; reference: string; amount: number } }>('POST', '/payment/init-stage', { stage, renewal }),
 
   verifyStageUpgrade: (reference: string) =>
-    req<{ success: true; message: string; data: { stage: string; stageNum: number } }>('GET', `/payment/verify-stage?reference=${encodeURIComponent(reference)}`),
+    req<{ success: true; message: string; data: { stage: string } }>('GET', `/payment/verify-stage?reference=${encodeURIComponent(reference)}`),
+
+  turnOffAutoRenew: () =>
+    req<{ success: true; message: string }>('POST', '/payment/renewal', { mode: 'manual' }),
 
   verifyModulePayment: (reference: string) =>
     req<{ success: true; message: string }>('GET', `/payment/verify-module?reference=${encodeURIComponent(reference)}`),
