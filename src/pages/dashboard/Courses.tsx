@@ -49,6 +49,10 @@ export default function Courses() {
 
   const ownedStage = user?.stage ?? 0;
   const neverPaid = ownedStage === 0;
+  const onTrial = user?.subscription === 'trial' && !!user.trialEndsAt && new Date(user.trialEndsAt) > new Date();
+  const trialEndText = user?.trialEndsAt
+    ? new Date(user.trialEndsAt).toLocaleDateString('en-NG', { day: 'numeric', month: 'long' })
+    : '';
 
   // Renew = same stage they had, upgrade = higher, pay = anything else (e.g. after the trial).
   const actionFor = (st: typeof STAGES[number]): PayAction =>
@@ -358,6 +362,21 @@ export default function Courses() {
                           );
                         })}
                       </div>
+
+                      {/* On the free trial: Fish is open, but they can already pay to keep it */}
+                      {isUnlocked && st.trial && onTrial && (
+                        <div className="px-4 sm:px-5 py-3 border-t border-gray-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                          <p className="text-xs text-gray-400">
+                            Your free trial ends {trialEndText}. Pay ₦{st.price.toLocaleString()} now to keep Fish — your paid month starts when the trial ends.
+                          </p>
+                          <button
+                            onClick={() => setPayDialog({ stage: 'fish', action: 'pay' })}
+                            className="shrink-0 px-4 py-1.5 rounded-lg text-xs font-semibold text-white whitespace-nowrap"
+                            style={{ background: '#F5820A' }}>
+                            Pay for Fish now →
+                          </button>
+                        </div>
+                      )}
 
                       {/* Upgrade footer for locked stages */}
                       {!isUnlocked && (

@@ -20,6 +20,8 @@ export default function Settings() {
   const [pwMsg, setPwMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   const [renewOpen, setRenewOpen] = useState(false);
+  const [payFishOpen, setPayFishOpen] = useState(false);
+  const onTrial = user?.subscription === 'trial' && !!user.trialEndsAt && new Date(user.trialEndsAt) > new Date();
   const [turningOff, setTurningOff] = useState(false);
   const [planMsg, setPlanMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
@@ -91,6 +93,9 @@ export default function Settings() {
       {renewOpen && stageKey && (
         <PayStageDialog stage={stageKey} action="renew" onClose={() => setRenewOpen(false)} />
       )}
+      {payFishOpen && (
+        <PayStageDialog stage="fish" action="pay" onClose={() => setPayFishOpen(false)} />
+      )}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="p-5 border-b border-gray-100 flex items-center gap-2">
           <CreditCard className="text-amber-500" size={20} />
@@ -150,9 +155,21 @@ export default function Settings() {
                   </p>
                 )}
               </div>
-              <Link to="/dashboard/courses" className="bg-amber-500 hover:bg-amber-600 text-white font-semibold px-5 py-2.5 rounded-lg">
-                Choose a plan
-              </Link>
+              <div className="flex flex-col sm:items-end gap-2 w-full sm:w-auto">
+                {onTrial ? (
+                  <>
+                    <button onClick={() => setPayFishOpen(true)} className="bg-amber-500 hover:bg-amber-600 text-white font-semibold px-5 py-2.5 rounded-lg">
+                      Pay for Fish now — {naira(STAGE_INFO.fish.price)}/month
+                    </button>
+                    <p className="text-xs text-gray-400 sm:text-right">Your paid month starts when the trial ends.</p>
+                    <Link to="/dashboard/courses" className="text-sm text-amber-600 hover:underline">Or choose a higher stage →</Link>
+                  </>
+                ) : (
+                  <Link to="/dashboard/courses" className="bg-amber-500 hover:bg-amber-600 text-white font-semibold px-5 py-2.5 rounded-lg">
+                    Choose a plan
+                  </Link>
+                )}
+              </div>
             </div>
           )}
         </div>
