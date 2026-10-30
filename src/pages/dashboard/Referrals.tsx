@@ -38,9 +38,12 @@ export default function Referrals() {
   const [error, setError] = useState('');
   const [commissionRates, setCommissionRates] = useState<number[]>(DEFAULT_RATES);
 
-  const referralLink = `${window.location.origin}/register?ref=${user?.referralCode}`;
+  // The server creates a code for older accounts that don't have one yet.
+  const referralCode = data?.referralCode || user?.referralCode || '';
+  const referralLink = referralCode ? `${window.location.origin}/register?ref=${referralCode}` : '';
 
   const copyToClipboard = () => {
+    if (!referralLink) return;
     navigator.clipboard.writeText(referralLink);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -86,12 +89,14 @@ export default function Referrals() {
               <input
                 type="text"
                 value={referralLink}
+                placeholder={loading ? 'Loading your link…' : 'Your link is not available yet — please refresh'}
                 readOnly
                 className="flex-1 bg-white/20 border border-white/30 rounded-lg px-4 py-2 text-white placeholder-white/70"
               />
               <button
                 onClick={copyToClipboard}
-                className="px-4 py-2 rounded-lg flex items-center gap-2 font-medium bg-white text-amber-600 hover:bg-gray-100"
+                disabled={!referralLink}
+                className="px-4 py-2 rounded-lg flex items-center gap-2 font-medium bg-white text-amber-600 hover:bg-gray-100 disabled:opacity-60"
               >
                 <Copy size={16} />
                 {copied ? 'Copied!' : 'Copy'}
