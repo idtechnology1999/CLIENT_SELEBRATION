@@ -69,7 +69,7 @@ export default function Layout() {
               {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
             <Link to="/">
-              <img src={logo} alt="Selebration" className="h-8 w-auto object-contain" />
+              <img src={logo} alt="Selliberation" className="h-8 w-auto object-contain" />
             </Link>
           </div>
           <div className="flex items-center gap-4">

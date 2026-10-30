@@ -11,7 +11,7 @@ export default function Landing() {
       <header className="fixed top-0 left-0 right-0 bg-gray-900/95 backdrop-blur z-50 border-b border-gray-800">
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
           <Link to="/">
-            <img src={logo} alt="Selebration" className="h-10 w-auto object-contain" />
+            <img src={logo} alt="Selliberation" className="h-10 w-auto object-contain" />
           </Link>
           <nav className="hidden md:flex items-center gap-8">
             <a href="#how-it-works" className="text-gray-300 hover:text-white transition-colors">How It Works</a>
@@ -47,7 +47,7 @@ export default function Landing() {
                 Learning a skill is just the beginning. The real opportunity lies in knowing how to monetize it, build income streams, grow a business, and create lasting value.
               </p>
               <p className="text-lg md:text-2xl font-semibold text-white leading-snug text-balance border-y border-amber-500/30 py-5">
-                SellLiberation helps you turn <span className="text-amber-500">what you know</span> into{' '}
+                Selliberation helps you turn <span className="text-amber-500">what you know</span> into{' '}
                 <span className="text-amber-500">what you earn</span> and what you earn into{' '}
                 <span className="text-amber-500">what you build</span>.
               </p>

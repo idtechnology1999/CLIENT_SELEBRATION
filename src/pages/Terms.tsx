@@ -11,7 +11,7 @@ export default function Terms() {
       <header className="fixed top-0 left-0 right-0 bg-gray-900/95 backdrop-blur z-50 border-b border-gray-800">
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
           <Link to="/">
-            <img src={logo} alt="Selebration" className="h-10 w-auto object-contain" />
+            <img src={logo} alt="Selliberation" className="h-10 w-auto object-contain" />
           </Link>
           <div className="flex items-center gap-4">
             <Link to="/login" className="text-gray-300 hover:text-white hidden sm:block">Login</Link>
