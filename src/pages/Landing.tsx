@@ -1,8 +1,10 @@
 import logo from '../assets/logo.png';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Check, Award, DollarSign, BookOpen, UserPlus } from 'lucide-react';
+import { usePrices } from '../hooks/usePrices';
 
 export default function Landing() {
+  const prices = usePrices();
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
@@ -145,7 +147,7 @@ export default function Landing() {
               <h3 className="text-lg font-bold text-blue-400 mb-0.5">FISH</h3>
               <p className="text-sm text-gray-400 mb-4">First Money Online</p>
               <div className="mb-5">
-                <span className="text-3xl font-bold text-white">₦5,000</span>
+                <span className="text-3xl font-bold text-white">₦{prices.fish.toLocaleString()}</span>
                 <span className="text-gray-400 text-sm ml-1">/ month</span>
                 <p className="text-xs text-blue-400 mt-1 font-medium">7-day free trial included</p>
               </div>
@@ -168,7 +170,7 @@ export default function Landing() {
               <h3 className="text-lg font-bold text-teal-400 mb-0.5">DOLPHIN</h3>
               <p className="text-sm text-gray-400 mb-4">Skilled Digital Earner</p>
               <div className="mb-5">
-                <span className="text-3xl font-bold text-white">₦15,000</span>
+                <span className="text-3xl font-bold text-white">₦{prices.dolphin.toLocaleString()}</span>
                 <span className="text-gray-400 text-sm ml-1">/ month</span>
               </div>
               <p className="text-sm font-semibold text-white mb-3">Everything in Fish, plus:</p>
@@ -194,7 +196,7 @@ export default function Landing() {
               <h3 className="text-lg font-bold text-purple-400 mb-0.5">SHARK</h3>
               <p className="text-sm text-gray-400 mb-4">Build An Online Business</p>
               <div className="mb-5">
-                <span className="text-3xl font-bold text-white">₦50,000</span>
+                <span className="text-3xl font-bold text-white">₦{prices.shark.toLocaleString()}</span>
                 <span className="text-gray-400 text-sm ml-1">/ month</span>
               </div>
               <p className="text-sm font-semibold text-white mb-3">Everything in Fish &amp; Dolphin, plus:</p>
@@ -220,7 +222,7 @@ export default function Landing() {
               <h3 className="text-lg font-bold text-amber-400 mb-0.5">WHALE</h3>
               <p className="text-sm text-gray-400 mb-4">Wealth, Influence & Legacy</p>
               <div className="mb-5">
-                <span className="text-3xl font-bold text-white">₦150,000</span>
+                <span className="text-3xl font-bold text-white">₦{prices.whale.toLocaleString()}</span>
                 <span className="text-gray-400 text-sm ml-1">/ month</span>
               </div>
               <p className="text-sm font-semibold text-white mb-3">Everything in Fish, Dolphin &amp; Shark, plus:</p>

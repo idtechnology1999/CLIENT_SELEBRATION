@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { Copy, QrCode, Users, TrendingUp, Gift, AlertCircle, Lock } from 'lucide-react';
 import { studentApi, publicApi } from '../../services/api';
+import { usePrices } from '../../hooks/usePrices';
+import type { StageKey } from '../../types';
 
 interface ReferralData {
   referralCode: string;
@@ -19,7 +21,7 @@ interface ReferralData {
 
 const DEFAULT_RATES = [65, 15, 5, 3, 2, 1];
 
-const COURSE_LEVELS = [
+const COURSE_LEVEL_DEFS = [
   { key: 'fish',    label: 'Become a Fish',    price: 5000,   icon: '🐟', color: 'blue'   },
   { key: 'dolphin', label: 'Become a Dolphin', price: 15000,  icon: '🐬', color: 'teal'   },
   { key: 'shark',   label: 'Become a Shark',   price: 50000,  icon: '🦈', color: 'purple' },
@@ -28,6 +30,8 @@ const COURSE_LEVELS = [
 
 export default function Referrals() {
   const { user } = useAuth();
+  const prices = usePrices();
+  const COURSE_LEVELS = COURSE_LEVEL_DEFS.map(l => ({ ...l, price: prices[l.key as StageKey] }));
   const [copied, setCopied] = useState(false);
   const [data, setData] = useState<ReferralData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -135,7 +139,7 @@ export default function Referrals() {
             <span className="text-gray-500">Your Level</span>
           </div>
           <p className="text-3xl font-bold text-gray-900">
-            {loading ? '—' : COURSE_LEVELS[(data?.stage ?? user?.stage ?? 0)]?.label ?? `Stage ${data?.stage ?? 0}`}
+            {loading ? '—' : COURSE_LEVELS[(data?.stage ?? user?.stage ?? 0) - 1]?.label ?? (user?.subscription === 'trial' ? 'Free trial' : 'No plan yet')}
           </p>
         </div>
       </div>

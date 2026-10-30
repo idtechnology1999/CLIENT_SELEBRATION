@@ -4,6 +4,7 @@ import { paymentApi } from '../services/api';
 import type { Renewal, StageKey } from '../types';
 import { STAGE_INFO, naira } from '../utils/stages';
 import RenewalOptions from './RenewalOptions';
+import { usePrices } from '../hooks/usePrices';
 
 interface Props {
   stage: StageKey;
@@ -15,6 +16,7 @@ interface Props {
 // Asks how to renew, then sends the logged-in user to Paystack for one month of a stage.
 export default function PayStageDialog({ stage, action, onClose }: Props) {
   const info = STAGE_INFO[stage];
+  const price = usePrices()[stage];
   const [renewal, setRenewal] = useState<Renewal>('auto');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -42,7 +44,7 @@ export default function PayStageDialog({ stage, action, onClose }: Props) {
           <div>
             <h2 className="text-lg font-bold text-gray-900">{info.icon} {title}</h2>
             <p className="text-sm text-gray-500 mt-0.5">
-              {naira(info.price)} per month · unlocks {info.label} and every stage below it
+              {naira(price)} per month · unlocks {info.label} and every stage below it
             </p>
           </div>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600" aria-label="Close">
@@ -59,7 +61,7 @@ export default function PayStageDialog({ stage, action, onClose }: Props) {
           disabled={loading}
           className="w-full bg-amber-500 hover:bg-amber-600 disabled:opacity-60 text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2"
         >
-          {loading ? <><Loader size={16} className="animate-spin" /> Opening Paystack…</> : <>Continue to payment — {naira(info.price)}</>}
+          {loading ? <><Loader size={16} className="animate-spin" /> Opening Paystack…</> : <>Continue to payment — {naira(price)}</>}
         </button>
       </div>
     </div>

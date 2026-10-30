@@ -7,12 +7,14 @@ import { getPaidPlan, afterAuthPath, withPlan } from '../utils/plan';
 import { signupApi, setSignupToken } from '../services/api';
 import { STAGE_INFO, naira } from '../utils/stages';
 import RenewalOptions from '../components/RenewalOptions';
+import { usePrices } from '../hooks/usePrices';
 import type { Renewal } from '../types';
 
 export default function Register() {
   const [searchParams] = useSearchParams();
   const refCode = searchParams.get('ref') || '';
   const plan = getPaidPlan(searchParams);
+  const prices = usePrices();
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -91,7 +93,7 @@ export default function Register() {
                 <p className="text-gray-400 mb-6">
                   Create your account for the{' '}
                   <span className="text-amber-400 font-semibold">{STAGE_INFO[plan].icon} {STAGE_INFO[plan].label}</span> plan
-                  ({naira(STAGE_INFO[plan].price)}/month). You'll pay next, then confirm your email.
+                  ({naira(prices[plan])}/month). You'll pay next, then confirm your email.
                 </p>
               ) : (
                 <p className="text-gray-400 mb-6">Start your 7-day free trial today</p>
@@ -180,7 +182,7 @@ export default function Register() {
                   className="w-full bg-amber-500 hover:bg-amber-600 disabled:opacity-60 text-gray-900 font-bold py-3 rounded-lg transition-colors"
                 >
                   {plan
-                    ? (loading ? 'Opening Paystack...' : `Continue to Payment — ${naira(STAGE_INFO[plan].price)}`)
+                    ? (loading ? 'Opening Paystack...' : `Continue to Payment — ${naira(prices[plan])}`)
                     : (loading ? 'Sending OTP...' : 'Start Free Trial')}
                 </button>
               </form>

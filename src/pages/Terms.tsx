@@ -1,8 +1,10 @@
 import logo from '../assets/logo.png';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
+import { usePrices } from '../hooks/usePrices';
 
 export default function Terms() {
+  const prices = usePrices();
   const navigate = useNavigate();
   return (
     <div className="min-h-screen bg-gray-900 text-white">
@@ -63,10 +65,10 @@ export default function Terms() {
             <h2 className="text-xl font-bold text-white mb-3">4. Subscriptions and Payments</h2>
             <p className="mb-3">Selliberation offers four subscription levels:</p>
             <ul className="space-y-2 list-disc list-inside text-gray-300 mb-4">
-              <li><span className="text-white font-medium">Fish (🐟):</span> ₦5,000 / month — includes a 7-day free trial on first sign-up.</li>
-              <li><span className="text-white font-medium">Dolphin (🐬):</span> ₦15,000 / month.</li>
-              <li><span className="text-white font-medium">Shark (🦈):</span> ₦50,000 / month.</li>
-              <li><span className="text-white font-medium">Whale (🐋):</span> ₦150,000 / month.</li>
+              <li><span className="text-white font-medium">Fish (🐟):</span> ₦{prices.fish.toLocaleString()} / month — includes a 7-day free trial on first sign-up.</li>
+              <li><span className="text-white font-medium">Dolphin (🐬):</span> ₦{prices.dolphin.toLocaleString()} / month.</li>
+              <li><span className="text-white font-medium">Shark (🦈):</span> ₦{prices.shark.toLocaleString()} / month.</li>
+              <li><span className="text-white font-medium">Whale (🐋):</span> ₦{prices.whale.toLocaleString()} / month.</li>
             </ul>
             <p>
               All payments are processed securely through Paystack. Subscriptions are billed on a monthly recurring basis. By subscribing, you authorise Selliberation to charge your chosen payment method each month until you cancel.

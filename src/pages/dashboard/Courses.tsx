@@ -4,9 +4,10 @@ import { Play, Lock, BookOpen, AlertCircle, ChevronLeft, ChevronDown, ChevronUp 
 import { studentApi, fixUrl } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import PayStageDialog from '../../components/PayStageDialog';
+import { usePrices } from '../../hooks/usePrices';
 import type { StageKey } from '../../types';
 
-const STAGES: { key: StageKey; num: number; label: string; price: number; trial: boolean; bg: string; border: string; badge: string; icon: string }[] = [
+const STAGE_DEFS: { key: StageKey; num: number; label: string; price: number; trial: boolean; bg: string; border: string; badge: string; icon: string }[] = [
   { key: 'fish',    num: 1, label: 'Become a Fish',    price: 5000,   trial: true,  bg: 'bg-blue-50',   border: 'border-blue-300',   badge: 'bg-blue-100 text-blue-700',    icon: '🐟' },
   { key: 'dolphin', num: 2, label: 'Become a Dolphin', price: 15000,  trial: false, bg: 'bg-teal-50',   border: 'border-teal-300',   badge: 'bg-teal-100 text-teal-700',    icon: '🐬' },
   { key: 'shark',   num: 3, label: 'Become a Shark',   price: 50000,  trial: false, bg: 'bg-purple-50', border: 'border-purple-300', badge: 'bg-purple-100 text-purple-700', icon: '🦈' },
@@ -21,6 +22,9 @@ type PayAction = 'upgrade' | 'renew' | 'pay';
 
 export default function Courses() {
   const { user } = useAuth();
+  // Stage definitions with the current admin-panel prices.
+  const prices = usePrices();
+  const STAGES = STAGE_DEFS.map(st => ({ ...st, price: prices[st.key] }));
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');

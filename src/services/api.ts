@@ -132,7 +132,7 @@ export const studentApi = {
 
 export const publicApi = {
   getSettings: () =>
-    req<{ success: true; data: { commissionRates: number[]; subscriptionPrice: number; trialDays: number } }>('GET', '/settings/public'),
+    req<{ success: true; data: { commissionRates: number[]; subscriptionPrice: number; stagePrices?: Record<StageKey, number>; trialDays: number } }>('GET', '/settings/public'),
 
   getCourses: () =>
     req<{ success: true; data: Array<{ id: string; title: string; description: string; thumbnail: string; category: string; difficulty: string; modulesCount: number; whatYouLearn: string[] }> }>('GET', '/courses/public'),

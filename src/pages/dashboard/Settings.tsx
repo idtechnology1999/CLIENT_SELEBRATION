@@ -4,6 +4,7 @@ import { User, Lock, Save, Check, AlertCircle, CreditCard } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { studentApi, paymentApi } from '../../services/api';
 import PayStageDialog from '../../components/PayStageDialog';
+import { usePrices } from '../../hooks/usePrices';
 import { STAGE_INFO, formatDate, naira, stageKeyFromNumber } from '../../utils/stages';
 
 export default function Settings() {
@@ -27,6 +28,7 @@ export default function Settings() {
 
   const stageKey = stageKeyFromNumber(user?.stage ?? 0);
   const stage = stageKey ? STAGE_INFO[stageKey] : null;
+  const prices = usePrices();
 
   const turnOffAutoRenew = async () => {
     setPlanMsg(null);
@@ -114,7 +116,7 @@ export default function Settings() {
               <div className="space-y-1">
                 <p className="text-sm text-gray-500">Current plan</p>
                 <p className="text-lg font-bold text-gray-900">
-                  {stage.icon} {stage.label} <span className="text-sm font-normal text-gray-500">· {naira(stage.price)}/month</span>
+                  {stage.icon} {stage.label} <span className="text-sm font-normal text-gray-500">· {naira(prices[stageKey!])}/month</span>
                 </p>
                 {user?.paidUp ? (
                   <p className="text-sm text-gray-600">
@@ -159,7 +161,7 @@ export default function Settings() {
                 {onTrial ? (
                   <>
                     <button onClick={() => setPayFishOpen(true)} className="bg-amber-500 hover:bg-amber-600 text-white font-semibold px-5 py-2.5 rounded-lg">
-                      Pay for Fish now — {naira(STAGE_INFO.fish.price)}/month
+                      Pay for Fish now — {naira(prices.fish)}/month
                     </button>
                     <p className="text-xs text-gray-400 sm:text-right">Your paid month starts when the trial ends.</p>
                     <Link to="/dashboard/courses" className="text-sm text-amber-600 hover:underline">Or choose a higher stage →</Link>
