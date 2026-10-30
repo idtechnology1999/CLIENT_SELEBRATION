@@ -44,7 +44,7 @@ export default function Landing() {
             </h1>
             <div className="max-w-2xl mx-auto mb-10 space-y-6">
               <p className="text-lg md:text-xl text-gray-300 leading-relaxed text-pretty">
-                Learning a skill is just the beginning. The real opportunity lies in knowing how to monetize it, build income streams, grow a business, and create lasting value.
+                Learning a skill is just the beginning. The real opportunity lies in knowing how to monetise it, build income streams, grow a business, and create lasting value.
               </p>
               <p className="text-lg md:text-2xl font-semibold text-white leading-snug text-balance border-y border-amber-500/30 py-5">
                 Selliberation helps you turn <span className="text-amber-500">what you know</span> into{' '}
@@ -175,7 +175,7 @@ export default function Landing() {
               </div>
               <p className="text-sm font-semibold text-white mb-3">Everything in Fish, plus:</p>
               <ul className="space-y-2.5 mb-6 flex-1">
-                {['High-Income Digital Skills', 'Generative AI & Content Creation', 'Freelancing Blueprint', 'Client Closing Scripts', 'Remote Job System', 'YouTube Monetisation & Automation', 'Digital Product Creation & Marketing', 'Offer Creation & Scaling'].map(f => (
+                {['High-Income Digital Skills', 'Generative AI & Content Creation', 'Freelancing Blueprint', 'Client Closing Scripts', 'YouTube Monetisation & Automation', 'Digital Product Creation & Marketing', 'Offer Creation & Scaling'].map(f => (
                   <li key={f} className="flex items-start gap-2 text-sm text-gray-300">
                     <Check className="text-teal-400 flex-shrink-0 mt-0.5" size={15} />{f}
                   </li>
