@@ -87,7 +87,9 @@ export default function Withdraw() {
   const [submitted, setSubmitted] = useState(false);
   const [submitError, setSubmitError] = useState('');
 
-  const MIN = 10000;
+  const [MIN, setMin] = useState(10000);
+  const [pendingEarnings, setPendingEarnings] = useState(0);
+  const [nextPayoutAt, setNextPayoutAt] = useState('');
 
   const loadData = () => {
     setLoadError('');
@@ -96,7 +98,13 @@ export default function Withdraw() {
       studentApi.getWithdrawals(),
       studentApi.getBankAccount(),
     ]).then(([dashResult, histResult, bankResult]) => {
-      if (dashResult.status === 'fulfilled') setWithdrawable(dashResult.value.data.stats.withdrawable);
+      if (dashResult.status === 'fulfilled') {
+        const d = dashResult.value.data;
+        setWithdrawable(d.stats.withdrawable);
+        setPendingEarnings(d.stats.pending ?? 0);
+        if (d.minWithdrawal) setMin(d.minWithdrawal);
+        if (d.nextPayoutAt) setNextPayoutAt(d.nextPayoutAt);
+      }
       if (histResult.status === 'fulfilled') setWithdrawals(histResult.value.data);
       if (bankResult.status === 'fulfilled') {
         const b = bankResult.value.data;
@@ -109,7 +117,11 @@ export default function Withdraw() {
   useEffect(() => { loadData(); }, []);
 
   const pendingWithdrawals = withdrawals.filter(w => w.status === 'pending').reduce((s, w) => s + w.amount, 0);
-  const canWithdraw = withdrawable >= MIN;
+  const hasPendingRequest = withdrawals.some(w => w.status === 'pending');
+  const canWithdraw = withdrawable >= MIN && !hasPendingRequest;
+  const nextPayoutText = nextPayoutAt
+    ? new Date(nextPayoutAt).toLocaleString('en-NG', { weekday: 'long', day: 'numeric', month: 'long', hour: 'numeric', minute: '2-digit' })
+    : 'Thursday at 10pm';
 
   // ── account verification ──
   const verifyRequestIdRef = useRef(0);
@@ -381,9 +393,18 @@ export default function Withdraw() {
                 Please save your bank account above before making a withdrawal request.
               </div>
             )}
-            {!loading && !canWithdraw && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-blue-800 text-sm">
+              Earnings are released every <strong>Thursday at 10pm</strong>.
+              {pendingEarnings > 0 && <> ₦{pendingEarnings.toLocaleString()} earned this week will be released on {nextPayoutText}.</>}
+            </div>
+            {!loading && hasPendingRequest && (
               <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-yellow-700 text-sm">
-                Minimum withdrawal is ₦{MIN.toLocaleString()}. You need ₦{(MIN - withdrawable).toLocaleString()} more before you can withdraw.
+                You have a withdrawal waiting for approval. You can make another request once it's processed.
+              </div>
+            )}
+            {!loading && !hasPendingRequest && withdrawable < MIN && (
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-yellow-700 text-sm">
+                Minimum withdrawal is ₦{MIN.toLocaleString()}. You need ₦{(MIN - withdrawable).toLocaleString()} more available before you can withdraw.
               </div>
             )}
             {submitError && (

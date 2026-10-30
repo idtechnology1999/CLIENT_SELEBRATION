@@ -4,6 +4,13 @@ import { studentApi } from '../../services/api';
 
 type FilterType = 'all' | 'pending' | 'withdrawable' | 'withdrawn';
 
+const STATUS_LABEL: Record<FilterType, string> = {
+  all: 'All',
+  pending: 'This week',
+  withdrawable: 'Released',
+  withdrawn: 'Withdrawn',
+};
+
 interface Commission {
   id: string;
   payerId: string;
@@ -20,17 +27,20 @@ export default function Earnings() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+  const [stats, setStats] = useState({ totalEarned: 0, pending: 0, withdrawable: 0, withdrawn: 0 });
+
   useEffect(() => {
-    studentApi.getCommissions()
-      .then(res => setCommissions(res.data))
+    // Totals come from the server: available = released earnings minus withdrawals.
+    Promise.all([studentApi.getCommissions(), studentApi.getDashboard()])
+      .then(([commRes, dashRes]) => {
+        setCommissions(commRes.data);
+        setStats(dashRes.data.stats);
+      })
       .catch(err => setError(err.message || 'Failed to load earnings'))
       .finally(() => setLoading(false));
   }, []);
 
-  const totalEarned = commissions.reduce((s, c) => s + c.amount, 0);
-  const pending = commissions.filter(c => c.status === 'pending').reduce((s, c) => s + c.amount, 0);
-  const withdrawable = commissions.filter(c => c.status === 'withdrawable').reduce((s, c) => s + c.amount, 0);
-  const withdrawn = commissions.filter(c => c.status === 'withdrawn').reduce((s, c) => s + c.amount, 0);
+  const { totalEarned, pending, withdrawable, withdrawn } = stats;
 
   const filtered = filter === 'all' ? commissions : commissions.filter(c => c.status === filter);
 
@@ -51,8 +61,8 @@ export default function Earnings() {
       <div className="grid md:grid-cols-4 gap-4">
         {[
           { label: 'Total Earned', value: totalEarned, color: 'green', Icon: DollarSign },
-          { label: 'Pending', value: pending, color: 'yellow', Icon: Clock },
-          { label: 'Withdrawable', value: withdrawable, color: 'blue', Icon: TrendingUp },
+          { label: 'This week (released Thursday 10pm)', value: pending, color: 'yellow', Icon: Clock },
+          { label: 'Available to withdraw', value: withdrawable, color: 'blue', Icon: TrendingUp },
           { label: 'Withdrawn', value: withdrawn, color: 'purple', Icon: CheckCircle },
         ].map(({ label, value, color, Icon }) => (
           <div key={label} className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
@@ -73,7 +83,7 @@ export default function Earnings() {
         <div className="p-5 border-b border-gray-100 flex items-center justify-between">
           <h2 className="text-lg font-bold">Transaction History</h2>
           <div className="flex gap-2">
-            {(['all', 'pending', 'withdrawable', 'withdrawn'] as const).map(f => (
+            {(['all', 'pending', 'withdrawable'] as const).map(f => (
               <button
                 key={f}
                 onClick={() => setFilter(f)}
@@ -81,7 +91,7 @@ export default function Earnings() {
                   filter === f ? 'bg-amber-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
               >
-                {f}
+                {STATUS_LABEL[f]}
               </button>
             ))}
           </div>
@@ -114,7 +124,7 @@ export default function Earnings() {
                       c.status === 'withdrawable' ? 'bg-blue-100 text-blue-700' :
                       'bg-green-100 text-green-700'
                     }`}>
-                      {c.status}
+                      {STATUS_LABEL[c.status]}
                     </span>
                   </td>
                 </tr>
