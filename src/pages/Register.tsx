@@ -6,9 +6,7 @@ import logo from '../assets/logo.png';
 import { getPaidPlan, afterAuthPath, withPlan } from '../utils/plan';
 import { signupApi, setSignupToken } from '../services/api';
 import { STAGE_INFO, naira } from '../utils/stages';
-import RenewalOptions from '../components/RenewalOptions';
 import { usePrices } from '../hooks/usePrices';
-import type { Renewal } from '../types';
 
 export default function Register() {
   const [searchParams] = useSearchParams();
@@ -25,7 +23,6 @@ export default function Register() {
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [renewal, setRenewal] = useState<Renewal>('auto');
 
   // OTP verification step
   const [otpStep, setOtpStep] = useState(false);
@@ -43,7 +40,9 @@ export default function Register() {
     if (plan) {
       try {
         const res = await signupApi.registerPaid({
-          name, email, phone, password, referralCode: referralCode || undefined, stage: plan, renewal,
+          name, email, phone, password, referralCode: referralCode || undefined, stage: plan,
+          // Manual renewal only for now (automatic card renewal can be offered later).
+          renewal: 'manual',
         });
         setSignupToken(res.data.signupToken);
         window.location.href = res.data.authorizationUrl;
@@ -161,7 +160,11 @@ export default function Register() {
                     className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-amber-500"
                   />
                 </div>
-                {plan && <RenewalOptions value={renewal} onChange={setRenewal} theme="dark" />}
+                {plan && (
+                  <p className="text-sm text-gray-400 bg-gray-700/40 border border-gray-600 rounded-lg px-4 py-3">
+                    Your plan lasts one month. You renew it yourself each month — we'll remind you before it ends.
+                  </p>
+                )}
                 <label className="flex items-start gap-3 cursor-pointer">
                   <input
                     type="checkbox"
